@@ -34,7 +34,6 @@ let inline executeHttpWithResult<'responseType> (httpEndpoint:HttpEndpoint<'resp
     match result with
     | Ok response ->
       let! responseText = response.text ()
-      console.log responseText
       let responseModel = decoder responseText    
       return Ok responseModel
     | Error ex -> return Error $"Error with error {ex}"

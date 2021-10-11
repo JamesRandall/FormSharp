@@ -185,7 +185,7 @@ module Component =
         editor
 
   // Note that in order to have tables in side other tables we would need to pass down the updater and wrap it in the parent updater
-  let inline Table (componentKey:string) updateState state isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
+  let inline Table (componentKey:string) updateState rendererState isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
     let columns =
       props
       |> List.tryPick(function | TableProp.Columns columns -> Some columns | _ -> None)
@@ -204,7 +204,7 @@ module Component =
       )
     let collection =
       props
-      |> List.tryPick(function | TableProp.CollectionGetter getter -> Some (getter state.Model) | _ -> None)    
+      |> List.tryPick(function | TableProp.CollectionGetter getter -> Some (getter rendererState.Model) | _ -> None)    
       |> Option.defaultValue []
     let addItemOption =
       props
@@ -212,7 +212,7 @@ module Component =
     let collectionSetter:(CollectionAction -> 'formType -> 'collectionItemType -> 'formType) =
       props
       |> List.tryPick(function | TableProp.CollectionSetter setter -> Some setter | _ -> None)
-      |> Option.defaultValue (fun (_:CollectionAction) (_:'formType) (_:'collectionItemType) -> state.Model)
+      |> Option.defaultValue (fun (_:CollectionAction) (_:'formType) (_:'collectionItemType) -> rendererState.Model)
         
     let table =
       match collection |> List.isEmpty, props |> List.tryPick(function | TableProp.NoItemsMessage noItemsMessage -> Some noItemsMessage | _ -> None) with
@@ -225,21 +225,25 @@ module Component =
         let content =
           collection
           |> List.mapi(fun rowIndex row ->
+            // do NOT use "with" here, it may look ok but type inference will then decide that 'formType is 'collectionItemType
             let childRenderState =
               { Model = row
-                ComponentsLoading = state.ComponentsLoading
-                IsSaving = state.IsSaving
-                IsDisabled = state.IsDisabled
-                IsDirty = state.IsDirty
-                ErrorMessage = state.ErrorMessage          
-              } // do NOT use "with" here, it may look ok but type inference will then decide that 'formType is 'collectionItemType 
+                ComponentsLoading = rendererState.ComponentsLoading
+                IsSaving = rendererState.IsSaving
+                IsDisabled = rendererState.IsDisabled
+                IsDirty = rendererState.IsDirty
+                ErrorMessage = rendererState.ErrorMessage          
+              }
+            let updateRowState rowState =
+              let newState = collectionSetter (CollectionAction.Update rowIndex) rendererState.Model rowState.Model
+              updateState { rendererState with Model = newState }
             let cells =
               columns
               |> List.mapi(fun cellIndex (_, contentComponent) ->
                 Html.td [
                   prop.className "px-6 py-2 whitespace-nowrap text-gray-900"
                   prop.children [
-                    renderComponent $"{componentKey}_{rowIndex}_{cellIndex}" isFormDisabled true showValidationWhenNotDirty childRenderState updateState contentComponent
+                    renderComponent $"{componentKey}_{rowIndex}_{cellIndex}" isFormDisabled true showValidationWhenNotDirty childRenderState updateRowState contentComponent
                   ]
                 ]
               )
@@ -286,9 +290,9 @@ module Component =
       match addItemOption with
       | Some itemAdder ->
         let onAddHandler _ =
-          let newItem = itemAdder state.Model collection
-          let newModel = (collectionSetter CollectionAction.Add state.Model newItem)
-          updateState { state with Model = newModel  }          
+          let newItem = itemAdder rendererState.Model collection
+          let newModel = (collectionSetter CollectionAction.Add rendererState.Model newItem)
+          updateState { rendererState with Model = newModel  }          
         Html.div [
           prop.className "flex flex-row items-start"
           prop.children [
@@ -384,7 +388,7 @@ let Form formId
          showValidationWhenNotDirty
          (saveFunc:RendererState<'formType> -> Promise<unit>)
          (loadFunc:RendererState<'formType> -> Promise<unit>)
-         formDefinition =
+         formDefinition =  
   let isValidForSave =
     state.Model
     |> Helpers.validateForm formDefinition
