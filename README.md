@@ -50,3 +50,7 @@ Sure. Go ahead. Issues and discussions are open. But I may ask for money in retu
 ## Contributing
 
 Best to speak to me first as I'm changing things a lot at the moment.
+
+## License
+
+MIT - see the LICENSE file.
