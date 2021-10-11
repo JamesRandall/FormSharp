@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "scripts": {
+    "postinstall": "dotnet tool restore",
+    "start": "dotnet fable watch src --outDir \"./build\" --run webpack-dev-server",
+    "build": "dotnet fable src && webpack"
+  },
+  "devDependencies": {
+    "css-loader": "^2.1.1",
+    "file-loader": "^4.3.0",
+    "html-webpack-plugin": "^3.2.0",
+    "postcss": "^8.3.7",
+    "postcss-csso": "^5.0.1",
+    "postcss-fixes": "^3.0.0",
+    "postcss-import": "^14.0.2",
+    "postcss-loader": "^4.3.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^3.3.0",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.3.3",
+    "@tailwindcss/line-clamp": "^0.2.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "tailwindcss": "^2.2.15"
+  }
+}

@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{593826B0-E689-4313-9ACA-A6C475E83A8E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FormSharp.Fable.React", "src\FormSharp.Fable.React\FormSharp.Fable.React.fsproj", "{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{D764E711-8374-45A6-ADBE-1B9B1D428E34}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SimpleServer", "samples\SimpleServer\SimpleServer.fsproj", "{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fable.React.Tailwind.Sample", "samples\Fable.React.Tailwind.Sample\src\Fable.React.Tailwind.Sample.fsproj", "{485E5EDF-3CB5-4ED2-B977-A034293590B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7} = {593826B0-E689-4313-9ACA-A6C475E83A8E}
+		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7} = {D764E711-8374-45A6-ADBE-1B9B1D428E34}
+		{485E5EDF-3CB5-4ED2-B977-A034293590B1} = {D764E711-8374-45A6-ADBE-1B9B1D428E34}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

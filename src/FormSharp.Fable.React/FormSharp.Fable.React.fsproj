@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DefineConstants>FABLE_COMPILER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- the two linked files are converted into local files during the packing process -->
+    <Compile Include="..\Common\FormSharp.fs">
+      <Link>FormSharp.fs</Link>
+    </Compile>
+    <Compile Include="..\Common\FormSharp.Fable.fs">
+      <Link>FormSharp.Fable.fs</Link>
+    </Compile>
+    <Compile Include="FormSharp.React.fs" />
+    <Compile Include="FormSharp.React.Tailwind.fs" />      
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Browser.Dom" Version="2.2.0" />
+    <PackageReference Include="Fable.Core" Version="3.3.1" />
+    <PackageReference Include="Fable.Fetch" Version="2.3.1" />
+    <PackageReference Include="Feliz" Version="1.52.0" />
+    <PackageReference Include="Thoth.Json" Version="6.0.0" />
+  </ItemGroup>
+  <!-- leave this in place, it is uncommented by the pack process
+       its commented out as it causes Rider to show two obj folders in the source tree which is rather annoying 
+  -->
+  <!--<ItemGroup>
+    <Content Include="*.fsproj; **\*.fs; **\*.fsi; " PackagePath="fable\" />
+  </ItemGroup>-->
+</Project>

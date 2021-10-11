@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+        <WarnOn>3390;$(WarnOn)</WarnOn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\src\Common\FormSharp.fs">
+          <Link>FormSharp.fs</Link>
+        </Compile>
+        <Compile Include="..\Common\ExampleForm.fs">
+          <Link>ExampleForm.fs</Link>
+        </Compile>
+        <Compile Include="Program.fs" />
+        <Content Include="README.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Saturn" Version="0.15.0" />
+      <PackageReference Include="Thoth.Json.Giraffe" Version="5.0.0" />
+    </ItemGroup>
+
+</Project>
