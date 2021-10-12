@@ -10,6 +10,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SimpleServer", "samples\Sim
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fable.React.Tailwind.Sample", "samples\Fable.React.Tailwind.Sample\src\Fable.React.Tailwind.Sample.fsproj", "{485E5EDF-3CB5-4ED2-B977-A034293590B1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3896FD2A-029B-4006-A2D6-C2CB84709CD1}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FormSharp.Acceptance.Tests", "tests\FormSharp.Acceptance.Tests\FormSharp.Acceptance.Tests.fsproj", "{86CDC850-F343-4FF5-A842-5C2CCD003C8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,7 @@ Global
 		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7} = {593826B0-E689-4313-9ACA-A6C475E83A8E}
 		{FC71BA4C-DA3F-4ECC-A727-E33C67E74FA7} = {D764E711-8374-45A6-ADBE-1B9B1D428E34}
 		{485E5EDF-3CB5-4ED2-B977-A034293590B1} = {D764E711-8374-45A6-ADBE-1B9B1D428E34}
+		{86CDC850-F343-4FF5-A842-5C2CCD003C8A} = {3896FD2A-029B-4006-A2D6-C2CB84709CD1}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{ADDD1BEC-7DC4-4475-BC66-32CA6A0221D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,5 +38,9 @@ Global
 		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{485E5EDF-3CB5-4ED2-B977-A034293590B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86CDC850-F343-4FF5-A842-5C2CCD003C8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86CDC850-F343-4FF5-A842-5C2CCD003C8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86CDC850-F343-4FF5-A842-5C2CCD003C8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86CDC850-F343-4FF5-A842-5C2CCD003C8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

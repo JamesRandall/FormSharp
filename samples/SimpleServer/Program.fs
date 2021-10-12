@@ -5,7 +5,7 @@ open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Http
 open Saturn
 open Giraffe
-open ExampleForm
+open Model
 open FSharp.Control.Tasks
 
 type DropdownItem =
@@ -17,9 +17,9 @@ let mutable personRepository = [
   { Id = Guid.Parse("0EB0F488-832F-4144-8492-0CFE73200347")
     Surname = "Smith"
     Forename = "Helen"
-    DateOfBirth = DateTime.Now.AddYears(-30)
+    DateOfBirth = DateTime(1991,10,12,0,0,0,DateTimeKind.Utc)
     Comments = []
-    Role = Role.Administrator
+    Role = Role.Shopper
   }
 ]
 
@@ -46,6 +46,7 @@ let createPerson next (ctx:HttpContext) = task {
 let updatePerson next (ctx:HttpContext) = task {
   let! updatedPerson = ctx.BindJsonAsync<Person>()
   personRepository <- personRepository |> List.map(fun p -> if p.Id = updatedPerson.Id then updatedPerson else p)
+  Console.WriteLine(updatedPerson)
   // just a little delay so we can see the activity indicator on the clients
   //do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(2.))
   return! json updatedPerson next ctx
@@ -67,13 +68,6 @@ let apiRouter = router {
   post "/person" createPerson
   put "/person" updatePerson
 }  
-
-(*let configureCors (builder:CorsPolicyBuilder) =
-  builder
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-  |> ignore*)
 
 let app = application {
   use_cors "cors_policy" (fun b -> b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() |> ignore)

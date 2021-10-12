@@ -66,7 +66,7 @@ let inline createLoadFunction setState httpEndpointOption =
         setState { rendererState.ComponentFinishedLoading () with ErrorMessage = Some "Unable to load resource" }
     })
   
-let createSaveFunction options setState httpEndpointOption =
+let inline createSaveFunction options setState httpEndpointOption =
   let saveError = "Unable to save, please try again."
   match httpEndpointOption with
   | None -> (fun rendererState -> promise { options.OnComplete rendererState.Model })
@@ -80,3 +80,17 @@ let createSaveFunction options setState httpEndpointOption =
       | Error _ -> setState({rendererState with IsSaving = false ; ErrorMessage = Some saveError })
     })
 
+let getComponentName (labelOption:string option) depth index =
+  match labelOption with
+  | Some label ->
+    let labelWithoutSpaces = label.Replace(" ", "_")
+    $"input_{depth}_{index}_{labelWithoutSpaces}"
+  | None -> $"input_{depth}_{index}"
+
+let getInputComponentName inputProps =
+  getComponentName (inputProps |> List.tryPick(function | InputProp.Label l -> Some l | _ -> None))
+  
+let getDropdownComponentName dropdownProps =
+  getComponentName (dropdownProps |> List.tryPick(function | DropdownProp.Label l -> Some l | _ -> None))
+
+let getComponentKey prefix depth index = $"{prefix}_{depth}_{index}"  

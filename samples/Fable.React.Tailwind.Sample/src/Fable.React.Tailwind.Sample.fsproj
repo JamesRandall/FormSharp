@@ -6,6 +6,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Layout.fs" />
+    <Compile Include="..\..\Common\Model.fs">
+      <Link>Model.fs</Link>
+    </Compile>
     <Compile Include="..\..\Common\ExampleForm.fs">
       <Link>ExampleForm.fs</Link>
     </Compile>

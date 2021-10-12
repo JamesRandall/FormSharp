@@ -22,11 +22,15 @@ Keeping a few goals in mind as I work on it:
 
 The code is emerging from a production system and a poc and so is of varying quality and is definitely subject to significant change.
 
-If you want to take a look at how it works best place to start is with the [Fable.React.Tailwind.Sample app]()https://github.com/jamesrandall/formSharp/tree/samples/Fable.React.Tailwind.Sample).
+If you want to take a look at how it works best place to start is with the [Fable.React.Tailwind.Sample app](https://github.com/jamesrandall/formSharp/tree/samples/Fable.React.Tailwind.Sample).
 
 Docs to follow as I build it out.
 
 I was really tempted to call it Phorm but their are some Phorm-esque things in PHP land.
+
+## Tests
+
+Running the tests requires the installation of [Playwright for .NET](https://playwright.dev/dotnet/).
 
 ## Things to do
 
@@ -51,6 +55,6 @@ Sure. Go ahead. Issues and discussions are open. But I may ask for money in retu
 
 Best to speak to me first as I'm changing things a lot at the moment.
 
-## License
+## License
 
-MIT - see the LICENSE file.
+Available under MIT. See the [LICENSE](https://github.com/jamesrandall/formSharp/tree/LICENSE) file.

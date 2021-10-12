@@ -7,6 +7,7 @@ open FormSharp.Fable
 open FormSharp.Fable.React
 open Fable.Core.JsInterop
 open ExampleForm
+open Model
 
 importAll "./styles.css"
 

@@ -10,8 +10,8 @@
         <Compile Include="..\..\src\Common\FormSharp.fs">
           <Link>FormSharp.fs</Link>
         </Compile>
-        <Compile Include="..\Common\ExampleForm.fs">
-          <Link>ExampleForm.fs</Link>
+        <Compile Include="..\Common\Model.fs">
+          <Link>Model.fs</Link>
         </Compile>
         <Compile Include="Program.fs" />
         <Content Include="README.md" />

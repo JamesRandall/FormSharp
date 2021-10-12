@@ -9,9 +9,9 @@ open Fable.Core.JS
 module Component =
 
   [<ReactComponent>]
-  let EditorGroup (componentKey:string) labelOption editor =
+  let EditorGroup nameOption (componentPrefix:string) (depth:int) (cIndex:int) labelOption editor =
     Html.div [
-      prop.key componentKey
+      prop.key (getComponentKey componentPrefix depth cIndex)
       prop.className "mt-6 gap-y-6 gap-x-4"
       prop.children [
         Html.div [
@@ -23,6 +23,7 @@ module Component =
                 Html.label [
                   prop.className "block text-sm font-medium text-gray-700"
                   prop.text label
+                  match nameOption with | Some name -> prop.for' name | _ -> ()
                 ]
               | None -> React.fragment []            
             )
@@ -44,7 +45,7 @@ module Component =
       (if isInGrid then "border-gray-100" else "border-gray-300"), None, shadowStyling
     
   [<ReactComponent>]
-  let Dropdown (componentKey:string) updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ (props:DropdownProp<'formType, 'dropdownValueType> list) =
+  let Dropdown (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ (props:DropdownProp<'formType, 'dropdownValueType> list) =
     let items,setItems =
       React.useState(
         props |> List.tryPick(function | DropdownProp.Items items -> Some items | _ -> None) |> Option.defaultValue []
@@ -106,6 +107,7 @@ module Component =
           Html.select [
             prop.className $"{borderColor} {shadowStyling} focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm rounded-md disabled:bg-gray-50"
             prop.value value
+            prop.name (getDropdownComponentName props depth cIndex)
             propOnChange
             prop.disabled (isFormDisabled || isLoading)
             prop.children (
@@ -119,7 +121,10 @@ module Component =
       
     if hasLabel then
       EditorGroup
-        componentKey
+        ((getDropdownComponentName props depth cIndex) |> Some)
+        componentPrefix
+        depth
+        cIndex        
         labelOption
         select
     else
@@ -128,7 +133,7 @@ module Component =
     
 
   [<ReactComponent>]  
-  let Input (componentKey:string) updateState state isFormDisabled isInGrid showValidationWhenNotDirty type' _ props =
+  let Input (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty type' _ props =
       let isTouched,setIsTouched = React.useState false    
     
       let convertToPropValue value =
@@ -171,6 +176,7 @@ module Component =
               propValue
               propOnChange
               prop.disabled isFormDisabled
+              prop.name (getInputComponentName props depth cIndex)
             ]
             (match errorContentColor with | Some (msg,color) -> Html.span [prop.className $"{color} text-sm" ; prop.text msg] | _ -> React.fragment [])
           ]
@@ -178,14 +184,17 @@ module Component =
         
       if hasLabel then      
         EditorGroup
-          componentKey
+          ((getInputComponentName props depth cIndex) |> Some)
+          componentPrefix
+          depth
+          cIndex
           labelOption
           editor
       else
         editor
 
   // Note that in order to have tables in side other tables we would need to pass down the updater and wrap it in the parent updater
-  let inline Table (componentKey:string) updateState rendererState isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
+  let inline Table (componentPrefix:string) (depth:int) (cIndex:int) updateState rendererState isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
     let columns =
       props
       |> List.tryPick(function | TableProp.Columns columns -> Some columns | _ -> None)
@@ -243,12 +252,12 @@ module Component =
                 Html.td [
                   prop.className "px-6 py-2 whitespace-nowrap text-gray-900"
                   prop.children [
-                    renderComponent $"{componentKey}_{rowIndex}_{cellIndex}" isFormDisabled true showValidationWhenNotDirty childRenderState updateRowState contentComponent
+                    renderComponent componentPrefix (depth+1) cIndex isFormDisabled true showValidationWhenNotDirty childRenderState updateRowState contentComponent
                   ]
                 ]
               )
             Html.tr [
-              prop.key $"{componentKey}_{rowIndex}"
+              prop.key (getComponentKey componentPrefix (depth+1) cIndex)
               prop.className (if rowIndex % 2 = 0 then "bg-white" else "bg-gray-50")
               prop.children cells
             ]        
@@ -320,20 +329,23 @@ module Component =
     let labelOption = props |> List.tryPick(function | TableProp.Label label -> Some label | _ -> None)    
     if labelOption |> Option.isSome then      
       EditorGroup
-        componentKey
+        None
+        componentPrefix
+        depth
+        cIndex
         labelOption
         wrappedTable
     else
       wrappedTable
 
-  let rec render (componentKey:string) isFormDisabled isInGrid showValidationWhenNotDirty state updateState componentDefinition =
+  let rec render componentPrefix depth cIndex isFormDisabled isInGrid showValidationWhenNotDirty state updateState componentDefinition =
     let renderGroup _ props =
       let title =
         props
         |> List.tryPick(function
           | GroupProp.Title title ->
             Html.h3 [
-              prop.key $"{componentKey}_grouptitle"
+              prop.key $"{getComponentKey componentPrefix depth cIndex}_grouptitle"
               prop.className "text-lg leading-6 font-medium text-gray-900"
               prop.text title
             ] |> Some
@@ -345,7 +357,7 @@ module Component =
         |> List.tryPick(function
           | GroupProp.Description description ->
             Html.p [
-              prop.key $"{componentKey}_groupdescription"
+              prop.key $"{getComponentKey componentPrefix depth cIndex}_groupdescription"
               prop.className "mt-1 text-sm text-gray-500"
               prop.text description
             ] |> Some
@@ -357,9 +369,9 @@ module Component =
         |> List.tryPick(function
           | GroupProp.Children children ->
             Html.div [
-              prop.key $"{componentKey}_groupchildren"
+              prop.key $"{getComponentKey componentPrefix depth cIndex}_groupchildren"
               prop.className "mt-6 sm:mt-5 space-y-6 sm:space-y-5"
-              prop.children (children |> List.mapi (fun i c -> render $"{componentKey}_{i}" isFormDisabled false showValidationWhenNotDirty state updateState c)) 
+              prop.children (children |> List.mapi (fun i c -> render componentPrefix (depth+1) i isFormDisabled false showValidationWhenNotDirty state updateState c)) 
             ] |> Some
           | _ -> None
         )      
@@ -367,16 +379,16 @@ module Component =
       
       Html.div [
         prop.className "space-y-8 divide-y divide-gray-200"
-        prop.key componentKey
+        prop.key (getComponentKey componentPrefix depth cIndex)
         prop.children (Html.div [ title ; description ; children])        
       ]
     
     // TODO: come back to this and resolve more elegantly - see note on shims as to what this is all about
-    Shims.TextInputShim.renderer <- Input componentKey updateState state isFormDisabled isInGrid showValidationWhenNotDirty "text" 
-    Shims.DateInputShim.renderer <- Input componentKey updateState state isFormDisabled isInGrid showValidationWhenNotDirty "date" 
+    Shims.TextInputShim.renderer <- Input componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty "text" 
+    Shims.DateInputShim.renderer <- Input componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty "date" 
     Shims.GroupShim.renderer <- renderGroup
-    Shims.TableShim.renderer <- Table componentKey updateState state isFormDisabled isInGrid showValidationWhenNotDirty render
-    Shims.DropdownShim.renderer <- Dropdown componentKey updateState state isFormDisabled isInGrid showValidationWhenNotDirty
+    Shims.TableShim.renderer <- Table componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty render
+    Shims.DropdownShim.renderer <- Dropdown componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty
     
     componentDefinition.render state.Model
   
@@ -401,7 +413,7 @@ let Form formId
   let formContent =
     formDefinition
     |> List.mapi (fun i c ->
-      Component.render $"{formId}_{i}" isFormDisabled false showValidationWhenNotDirty state updateState c
+      Component.render formId 0 i isFormDisabled false showValidationWhenNotDirty state updateState c
     )
     
   React.useEffect((fun _ ->
@@ -435,10 +447,11 @@ let Form formId
               match button with
               | Button.Save ->
                 Html.button [
-                  prop.className "bg-blue-600 text-white rounded-md py-1 px-6 hover:bg-blue-400 disabled:bg-blue-400" 
+                  prop.className "bg-blue-600 text-white rounded-md pt-1 pb-2 px-6 hover:bg-blue-400 disabled:bg-blue-400" 
                   prop.text "Save"
+                  prop.type' "submit"
                   prop.disabled isButtonDisabled
-                  prop.onClick (fun _ -> saveFunc state |> ignore)
+                  prop.onClick (fun _ -> saveFunc state |> ignore)                  
                 ]
               | Button.Cancel ->
                 Html.button [
