@@ -57,4 +57,12 @@ jobs:
     - name: Run tests
       working-directory: "tests/FormSharp.Acceptance.Tests"
       run: dotnet run
+
+    - name: Upload diagnostic screenshot
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: screenshot
+        path: tests/FormSharp.Acceptance.Tests/screenshot.png
+      
     
