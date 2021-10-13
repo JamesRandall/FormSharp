@@ -37,7 +37,7 @@ let tests (browser:IBrowser) =
       Expect.equal result.[3] "1" "Role is incorrect"
     }
     
-    testTask "Saves updated changes" {
+    ptestTask "Saves updated changes" {
       let! updatedPersonResult = task {
         let! page = loadInitialPage ()
         do! page.FillAsync("[name=\"input_1_0_Surname\"]", "Jane")
