@@ -45,6 +45,8 @@ jobs:
         dotnet fable watch src --outDir build --run webpack-dev-server &
         wait-on http-get://localhost:8080/
     
+    - name: Test server endpoint
+      run: wget http://localhost:5000/person/0EB0F488-832F-4144-8492-0CFE73200347
     - name: Test client endpoint
       run: wget http://localhost:8080
 

@@ -12,14 +12,16 @@ open Hopac
 
 let tests (browser:IBrowser) =
   let loadInitialPage () = task {
-    let! page = browser.NewPageAsync()
+    let! context = browser.NewContextAsync(BrowserNewContextOptions())
+    let! page = context.NewPageAsync()
     let! _ = page.GotoAsync("http://localhost:8080")
     let! loader = page.WaitForSelectorAsync(".loader", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
     do! loader.WaitForElementStateAsync(ElementState.Hidden)
     return page
   }
   
-  testList "Loading and updating" [
+  // Our UI modifies the same server side item so we need to run these in sequence to get consistent results
+  testSequenced  <| testList "Loading and updating" [
     testTask "Presents loaded content" {
       let! (result:string list) = task {
         let! page = loadInitialPage ()        
