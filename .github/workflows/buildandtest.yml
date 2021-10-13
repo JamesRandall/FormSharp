@@ -31,11 +31,10 @@ jobs:
       working-directory: "tests/FormSharp.Acceptance.Tests"
     - name: Install playwright
       working-directory: "tests/FormSharp.Acceptance.Tests"        
-      #run: npx playwright install --with-deps
       run: |
         dotnet tool install --global Microsoft.Playwright.CLI
         playwright install
-        playwright install-deps chromium
+# playwright install-deps chromium
     
     - name: Install Fable tools
       working-directory: "samples/Fable.React.Tailwind.Sample"
@@ -63,6 +62,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: screenshot
-        path: tests/FormSharp.Acceptance.Tests/screenshot.png
+        path: tests/FormSharp.Acceptance.Tests/initialpagescreenshot.png
       
     

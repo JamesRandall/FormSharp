@@ -15,11 +15,11 @@ let tests (browser:IBrowser) =
     let! context = browser.NewContextAsync(BrowserNewContextOptions())
     let! page = context.NewPageAsync()
     let! _ = page.GotoAsync("http://localhost:8080/")
-    let! _ = page.ScreenshotAsync(PageScreenshotOptions(Path = "screenshot.png"))
-    Console.WriteLine (Directory.GetCurrentDirectory())
-    //let! _ = page.WaitForResponseAsync("**/person/0EB0F488-832F-4144-8492-0CFE73200347")
-    let! loader = page.WaitForSelectorAsync(".loader", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
-    do! loader.WaitForElementStateAsync(ElementState.Hidden)
+    let! _ = page.ScreenshotAsync(PageScreenshotOptions(Path = "initialpagescreenshot.png"))
+    // figuring out the right thing to wait for is awkward in GitHub Actions - what I assume is the resource constraned
+    // environment results in timeout errors if we wait for early page state changes - can be replicated on a local
+    // machine by placing a delay here
+    let! _ = page.WaitForSelectorAsync(".loader", PageWaitForSelectorOptions(State=WaitForSelectorState.Detached))    
     return page
   }
   
@@ -40,7 +40,7 @@ let tests (browser:IBrowser) =
       Expect.equal result.[3] "1" "Role is incorrect"
     }
     
-    ptestTask "Saves updated changes" {
+    testTask "Saves updated changes" {
       let! updatedPersonResult = task {
         let! page = loadInitialPage ()
         do! page.FillAsync("[name=\"input_1_0_Surname\"]", "Jane")
@@ -78,18 +78,4 @@ let main args =
     use! playwright = Playwright.CreateAsync () 
     let! browser = playwright.Chromium.LaunchAsync()
     return runTestsWithCLIArgs [] args (tests browser)
-  }).Result
-  
-  
-  (*(task {
-    use! playwright = Playwright.CreateAsync () 
-    let! browser = playwright.Chromium.LaunchAsync()
-    let! page = browser.NewPageAsync()
-    let! _ = page.GotoAsync("http://localhost:8080")
-    //let! _ = page.ScreenshotAsync(PageScreenshotOptions (Path = "screenshot.png" ))
-    let! surname = page.EvalOnSelectorAsync<string>("[name=\"input_1_0_Surname\"]", "e => e.value")
-    Console.WriteLine surname
-    return 0
-  }).Wait()*)
-  //0 // return an integer exit code
-  
+  }).Result  

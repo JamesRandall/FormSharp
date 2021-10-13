@@ -25,7 +25,7 @@ let mutable personRepository = [
 
 let getPerson (id:Guid) next ctx = task {
   // just a little delay so we can see the activity indicator on the clients
-  do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(0.5))
+  // do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(0.5))
   
   return!
     personRepository
@@ -39,7 +39,7 @@ let createPerson next (ctx:HttpContext) = task {
   let personWithGeneratedId = { newPerson with Id = Guid.NewGuid() }
   personRepository <- personWithGeneratedId :: personRepository
   // just a little delay so we can see the activity indicator on the clients
-  //do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(2.))
+  // do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(2.))
   return! json personWithGeneratedId next ctx
 }
 
@@ -48,7 +48,7 @@ let updatePerson next (ctx:HttpContext) = task {
   personRepository <- personRepository |> List.map(fun p -> if p.Id = updatedPerson.Id then updatedPerson else p)
   Console.WriteLine(updatedPerson)
   // just a little delay so we can see the activity indicator on the clients
-  do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(0.5))
+  //do! System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(0.5))
   return! json updatedPerson next ctx
 }
 
