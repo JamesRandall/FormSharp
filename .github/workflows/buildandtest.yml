@@ -34,7 +34,8 @@ jobs:
       #run: npx playwright install --with-deps
       run: |
         dotnet tool install --global Microsoft.Playwright.CLI
-        playwright install      
+        playwright install
+        playwright install-deps chromium
     
     - name: Install Fable tools
       working-directory: "samples/Fable.React.Tailwind.Sample"
