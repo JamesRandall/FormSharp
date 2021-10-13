@@ -1,30 +1,30 @@
 // Learn more about F# at http://docs.microsoft.com/dotnet/fsharp
 
 open System
-open System.Threading.Tasks
 open Model
 open FSharp.Control.Tasks
 open Microsoft.Playwright
 open Expecto
 open FsHttp
 open FsHttp.DslCE
-open Hopac
 
-let tests (browser:IBrowser) =
-  let loadInitialPage () = task {
-    let! context = browser.NewContextAsync(BrowserNewContextOptions())
-    let! page = context.NewPageAsync()
-    let! _ = page.GotoAsync("http://localhost:8080")
-    let! loader = page.WaitForSelectorAsync(".loader", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
-    do! loader.WaitForElementStateAsync(ElementState.Hidden)
-    return page
-  }
-  
+let tests =
   // Our UI modifies the same server side item so we need to run these in sequence to get consistent results
   testSequenced  <| testList "Loading and updating" [
     testTask "Presents loaded content" {
       let! (result:string list) = task {
-        let! page = loadInitialPage ()        
+        
+        use! playwright = Playwright.CreateAsync () 
+        let! browser = playwright.Chromium.LaunchAsync()
+        let! context = browser.NewContextAsync(BrowserNewContextOptions())
+        let! page = context.NewPageAsync()
+        let! _ = page.GotoAsync("http://localhost:8080/")
+        Console.WriteLine "Gone to page"
+        let! _ = page.WaitForResponseAsync("**/person/0EB0F488-832F-4144-8492-0CFE73200347")
+        Console.WriteLine "Network response"
+        //let! loader = page.WaitForSelectorAsync(".loader", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
+        //do! loader.WaitForElementStateAsync(ElementState.Hidden)              
+        //let! page = loadInitialPage ()        
         let! surname = page.EvalOnSelectorAsync<string>("[name=\"input_1_0_Surname\"]", "e => e.value")
         let! forename = page.EvalOnSelectorAsync<string>("[name=\"input_1_1_Forename\"]", "e => e.value")
         let! dateOfBirth = page.EvalOnSelectorAsync<string>("[name=\"input_1_2_Date_of_birth\"]", "e => e.value")
@@ -39,7 +39,15 @@ let tests (browser:IBrowser) =
     
     ptestTask "Saves updated changes" {
       let! updatedPersonResult = task {
-        let! page = loadInitialPage ()
+        use! playwright = Playwright.CreateAsync () 
+        let! browser = playwright.Chromium.LaunchAsync()
+        let! context = browser.NewContextAsync(BrowserNewContextOptions())
+        let! page = context.NewPageAsync()
+        let! _ = page.GotoAsync("http://localhost:8080/")
+        Console.WriteLine "Gone to page"
+        let! _ = page.WaitForResponseAsync("**/person/0EB0F488-832F-4144-8492-0CFE73200347")
+        Console.WriteLine "Network response"
+        //let! page = loadInitialPage ()
         do! page.FillAsync("[name=\"input_1_0_Surname\"]", "Jane")
         do! page.FillAsync("[name=\"input_1_1_Forename\"]", "Bloggs")
         do! page.FillAsync("[name=\"input_1_2_Date_of_birth\"]", "1989-10-12")
@@ -72,9 +80,8 @@ let tests (browser:IBrowser) =
 [<EntryPoint>]
 let main args =
   (task {
-    use! playwright = Playwright.CreateAsync () 
-    let! browser = playwright.Chromium.LaunchAsync()
-    return runTestsWithCLIArgs [] args (tests browser)
+    
+    return runTestsWithCLIArgs [] args tests
   }).Result
   
   
