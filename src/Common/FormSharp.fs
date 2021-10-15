@@ -335,7 +335,7 @@ type FormProp<'formType> =
   | OnComplete of ('formType -> unit)
   | OnCancel of ('formType -> unit)
   | OnChange of ('formType -> unit)
-  | Buttons of (Button list)
+  | Buttons of Button list
   | LoadFromUrl of HttpEndpoint<'formType>
   | SaveToUrl of HttpEndpoint<'formType>
   | Load of (unit->System.Threading.Tasks.Task<'formType>)
