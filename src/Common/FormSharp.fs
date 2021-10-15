@@ -34,7 +34,7 @@ type HttpEndpoint<'formType> =
 let inline createJsonDecoder<'responseType> () =
   #if FABLE_COMPILER
   let cachedDecoder = Thoth.Json.Decode.Auto.generateDecoderCached<'responseType>()
-  (fun json -> Thoth.Json.Decode.unsafeFromString cachedDecoder json)
+  (Thoth.Json.Decode.unsafeFromString cachedDecoder)
   #else
   let cachedDecoder = Thoth.Json.Net.Decode.Auto.generateDecoderCached<'responseType>()
   (fun json -> Thoth.Json.Net.Decode.unsafeFromString cachedDecoder json)
@@ -51,10 +51,14 @@ type PropertyValidator =
   | TextValidator of (string -> ValidationResult)
   | IntValidator of (int -> ValidationResult)
   | DateTimeValidator of (DateTime -> ValidationResult)
+  | FloatValidator of (float -> ValidationResult)
+  | BooleanValidator of (bool -> ValidationResult)
 with
   static member ($) (_, x:string-> ValidationResult) = PropertyValidator.TextValidator x
   static member ($) (_, x:int-> ValidationResult) = PropertyValidator.IntValidator x
   static member ($) (_, x:DateTime-> ValidationResult) = PropertyValidator.DateTimeValidator x
+  static member ($) (_, x:float-> ValidationResult) = PropertyValidator.FloatValidator x
+  static member ($) (_, x:bool-> ValidationResult) = PropertyValidator.BooleanValidator x
 let inline (|PropertyValidator|) x = Unchecked.defaultof<PropertyValidator> $ x
 
 
@@ -63,10 +67,14 @@ type PropertyGetter<'formType> =
   | TextGetter of ('formType -> string)
   | IntGetter of ('formType -> int)
   | DateTimeGetter of ('formType -> DateTime)
+  | FloatGetter of ('formType -> float)
+  | BooleanGetter of ('formType -> bool)
 with
   static member ($) (_, x:'formType -> string) = PropertyGetter.TextGetter x
   static member ($) (_, x:'formType -> int) = PropertyGetter.IntGetter x
   static member ($) (_, x:'formType-> DateTime) = PropertyGetter.DateTimeGetter x
+  static member ($) (_, x:'formType-> float) = PropertyGetter.FloatGetter x
+  static member ($) (_, x:'formType-> bool) = PropertyGetter.BooleanGetter x
 let inline (|PropertyGetter|) x = Unchecked.defaultof<PropertyGetter<'formType>> $ x
 
 [<RequireQualifiedAccess>]
@@ -74,10 +82,14 @@ type PropertySetter<'formType> =
   | TextSetter of ('formType -> string ->'formType)
   | IntSetter of ('formType -> int ->'formType)
   | DateTimeSetter of ('formType -> DateTime ->'formType)
+  | FloatSetter of  ('formType -> float ->'formType)
+  | BooleanSetter of  ('formType -> bool ->'formType)
 with
   static member ($) (_, x:'formType -> string ->'formType) = PropertySetter.TextSetter x
   static member ($) (_, x:'formType -> int ->'formType) = PropertySetter.IntSetter x
   static member ($) (_, x:'formType-> DateTime ->'formType) = PropertySetter.DateTimeSetter x
+  static member ($) (_, x:'formType-> float ->'formType) = PropertySetter.FloatSetter x
+  static member ($) (_, x:'formType-> bool ->'formType) = PropertySetter.BooleanSetter x
 let inline (|PropertySetter|) x = Unchecked.defaultof<PropertySetter<'formType>> $ x
 
 type TableColumnProp =
@@ -137,6 +149,11 @@ and DropdownProp<'formType, 'dropdownValueType> =
   | HttpItems of HttpEndpoint<DropdownItem<'dropdownValueType> list> option
   | DropdownValidator of ('dropdownValueType -> ValidationResult)
   | AllowEmpty
+and CheckBoxProp<'formType> =
+  | Label of string
+  | CheckBoxGetter of ('formType -> bool)
+  | CheckBoxSetter of ('formType -> bool -> 'formType)
+  | CheckBoxValidator of (bool -> ValidationResult)  
 and InputProp<'formType> =
   | Label of string
   | InputGetter of PropertyGetter<'formType>
@@ -148,6 +165,12 @@ and InputProp<'formType> =
     InputProp.InputGetter (PropertyGetter<'formType>.IntGetter getter)
   static member Getter<'formType>(getter:'formType->DateTime) =
     InputProp.InputGetter (PropertyGetter<'formType>.DateTimeGetter getter)
+  static member Getter<'formType>(getter:'formType->float) =
+    InputProp.InputGetter (PropertyGetter<'formType>.FloatGetter getter)
+  static member Getter<'formType>(getter:'formType->bool) =
+    InputProp.InputGetter (PropertyGetter<'formType>.BooleanGetter getter)
+
+  
     
   static member Setter<'formType>(setter:'formType->string->'formType) =
     InputSetter (PropertySetter<'formType>.TextSetter setter)
@@ -155,6 +178,10 @@ and InputProp<'formType> =
     InputSetter (PropertySetter<'formType>.IntSetter setter)
   static member Setter<'formType>(setter:'formType->DateTime->'formType) =
     InputSetter (PropertySetter<'formType>.DateTimeSetter setter)
+  static member Setter<'formType>(setter:'formType->float->'formType) =
+    InputSetter (PropertySetter<'formType>.FloatSetter setter)
+  static member Setter<'formType>(setter:'formType->bool->'formType) =
+    InputSetter (PropertySetter<'formType>.BooleanSetter setter)
   
   
 module Shims =
@@ -183,6 +210,10 @@ module Shims =
       model |> pg |> pv
     | Some (PropertyValidator.DateTimeValidator pv), Some (PropertyGetter.DateTimeGetter pg) ->
       model |> pg |> pv
+    | Some (PropertyValidator.FloatValidator pv), Some (PropertyGetter.FloatGetter pg) ->
+      model |> pg |> pv
+    | Some (PropertyValidator.BooleanValidator pv), Some (PropertyGetter.BooleanGetter pg) ->
+      model |> pg |> pv
     | _ -> ValidationResult.Ok
   
   type TextInputShim<'formType> (props:InputProp<'formType> list) =
@@ -196,6 +227,19 @@ module Shims =
       member ti.render state = ti.props |> TextInputShim.renderer state
       member ti.children = []
       member ti.validate model = unbox<'formType> model |> validateFormProps ti.props
+      //member ti.validate<'formValidationType> (model:'formValidationType) : ValidationResult = model |> validateFormProps ti.props
+      
+  type BooleanInputShim<'formType> (props:CheckBoxProp<'formType> list) =
+    #if FABLE_COMPILER
+    static member val renderer = ((fun _ _ -> Html.div []):'formType -> CheckBoxProp<'formType> list -> ReactElement) with get, set
+    #else
+    static member val renderer = ((fun state _ -> state):'formType -> CheckBoxProp<'formType> list -> 'formType) with get, set
+    #endif
+    member val props = props
+    interface IFormComponent<'formType> with
+      member ti.render state = ti.props |> BooleanInputShim.renderer state
+      member ti.children = []
+      member ti.validate model = ValidationResult.Ok // TODO
       //member ti.validate<'formValidationType> (model:'formValidationType) : ValidationResult = model |> validateFormProps ti.props
     
   type GroupShim<'formType> (props:GroupProp<'formType> list) =
@@ -247,15 +291,17 @@ module Shims =
     interface IFormComponent<'formType> with
       member ti.render state = DropdownShim.renderer state ti.props
       member ti.children = []
-      member ti.validate _ = ValidationResult.Ok
+      member ti.validate _ = ValidationResult.Ok // TODO
 
 let TextInput<'formType> properties = Shims.TextInputShim properties :> IFormComponent<'formType>
+let CheckBox<'formType> properties = Shims.BooleanInputShim properties :> IFormComponent<'formType>
 let Group<'formType> properties = Shims.GroupShim properties :> IFormComponent<'formType>
 let DateInput<'formType> properties = Shims.DateInputShim properties :> IFormComponent<'formType>
 let Table<'formType, 'collectionItemType> (properties:TableProp<'formType, 'collectionItemType> list)
   = Shims.TableShim properties :> IFormComponent<'formType>
 let Dropdown<'formType, 'dropdownValueType> (properties:DropdownProp<'formType, 'dropdownValueType> list)
   = Shims.DropdownShim properties :> IFormComponent<'formType>
+
        
 let inline Validate (PropertyValidator x) = InputProp.InputValidator x
     
@@ -324,12 +370,16 @@ module Helpers =
     | Text of string
     | Int of int
     | Date of DateTime
+    | Float of float
+    | Boolean of bool
     with
       member x.AsString =
         match x with
         | Text txt -> txt
         | Int i -> i.ToString()
-        | Date dt -> dt.ToString("yyyy-MM-dd")    
+        | Date dt -> dt.ToString("yyyy-MM-dd")
+        | Float f -> f.ToString()
+        | Boolean b -> if b then "yes" else "no" 
       
   let getInputValidator props = props |> List.tryPick(function | InputProp.InputValidator validator -> Some validator | _ -> None)    
   let getInputPropertyGetter props = props |> List.tryPick(function | InputProp.InputGetter getter -> Some getter | _ -> None)    
@@ -338,6 +388,10 @@ module Helpers =
   let getDropdownValidator props = props |> List.tryPick(function | DropdownProp.DropdownValidator validator -> Some validator | _ -> None)
   let getDropdownPropertyGetter props = props |> List.tryPick(function | DropdownProp.Getter getter -> Some getter | _ -> None)
   let getDropdownPropertySetter props = props |> List.tryPick(function | DropdownProp.Setter setter -> Some setter | _ -> None)
+  
+  let getCheckBoxValidator props = props |> List.tryPick(function | CheckBoxProp.CheckBoxValidator validator -> Some validator | _ -> None)    
+  let getCheckBoxPropertyGetter props = props |> List.tryPick(function | CheckBoxProp.CheckBoxGetter getter -> Some getter | _ -> None)    
+  let getCheckBoxPropertySetter props = props |> List.tryPick(function | CheckBoxProp.CheckBoxSetter setter -> Some setter | _ -> None)
     
   let getInputValueAndValidationState props model =
     let validator = props |> getInputValidator          
@@ -356,6 +410,14 @@ module Helpers =
       let value = func model
       let validationState = validator |> (function | Some (PropertyValidator.DateTimeValidator tv) -> tv value | _ -> ValidationResult.Ok)
       Value.Date value, validationState
+    | Some (PropertyGetter.FloatGetter func) ->
+      let value = func model
+      let validationState = validator |> (function | Some (PropertyValidator.FloatValidator tv) -> tv value | _ -> ValidationResult.Ok)
+      Value.Float value, validationState
+    | Some (PropertyGetter.BooleanGetter func) ->
+      let value = func model
+      let validationState = validator |> (function | Some (PropertyValidator.BooleanValidator tv) -> tv value | _ -> ValidationResult.Ok)
+      Value.Boolean value, validationState
     | _ -> Value.Text "", ValidationResult.Ok
   
   // this will navigate the entire form and return the "worst" validation state - error being worst, ok being best

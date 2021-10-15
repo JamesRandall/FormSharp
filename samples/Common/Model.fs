@@ -26,6 +26,7 @@ type Person =
     DateOfBirth: DateTime
     Comments: Comment list
     Role: Role
+    IsAuthorized: bool
   }
   static member Empty = {
     Id = Guid.Empty
@@ -37,6 +38,7 @@ type Person =
       //{ Id = Guid.NewGuid() ; Note = "Some different text" ; RecordedAt = DateTime.Now.AddDays(-1.) }
     //]
     Role = Role.Shopper
+    IsAuthorized = false
   }
   
 let requiredNameValidator surname =

@@ -34,6 +34,11 @@ let formDefinition = [
         AllowEmpty
         DropdownProp.Label "Role"
       ]
+      CheckBox [
+        CheckBoxProp.CheckBoxGetter (fun person -> person.IsAuthorized)
+        CheckBoxProp.CheckBoxSetter (fun person newValue -> { person with IsAuthorized = newValue })
+        CheckBoxProp.Label "Is person authorized"
+      ]
       Table [
         TableProp.Label "Comments"
         Collection.getter (fun person -> person.Comments)

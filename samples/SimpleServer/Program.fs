@@ -20,6 +20,7 @@ let mutable personRepository = [
     DateOfBirth = DateTime(1991,10,12,0,0,0,DateTimeKind.Utc)
     Comments = []
     Role = Role.Shopper
+    IsAuthorized = true
   }  
 ]
 

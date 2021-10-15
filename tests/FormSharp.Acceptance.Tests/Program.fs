@@ -32,12 +32,20 @@ let tests (browser:IBrowser) =
         let! forename = page.EvalOnSelectorAsync<string>("[name=\"input_1_1_Forename\"]", "e => e.value")
         let! dateOfBirth = page.EvalOnSelectorAsync<string>("[name=\"input_1_2_Date_of_birth\"]", "e => e.value")
         let! role = page.EvalOnSelectorAsync<string>("[name=\"input_1_3_Role\"]", "e => e.value")
-        return [ surname ; forename ; dateOfBirth ; role ]
+        let! isAuthorized = page.EvalOnSelectorAsync<bool>("[name=\"input_1_4_Is_person_authorized\"]", "e => e.checked")
+        return [
+          surname
+          forename
+          dateOfBirth
+          role
+          if isAuthorized then "yes" else "no"
+        ]
       }
       Expect.equal result.[0] "Smith" "Surname is incorrect"
       Expect.equal result.[1] "Helen" "Forename is incorrect"
       Expect.equal result.[2] "1991-10-12" "Date of birth is incorrect"
       Expect.equal result.[3] "1" "Role is incorrect"
+      Expect.equal result.[4] "yes" "Is authorized is incorrect"
     }
     
     testTask "Saves updated changes" {
@@ -48,6 +56,7 @@ let tests (browser:IBrowser) =
         do! page.FillAsync("[name=\"input_1_0_Surname\"]", "Jane")
         do! page.FillAsync("[name=\"input_1_1_Forename\"]", "Bloggs")
         do! page.FillAsync("[name=\"input_1_2_Date_of_birth\"]", "1989-10-12")
+        do! page.ClickAsync("[name=\"input_1_4_Is_person_authorized\"]")
         let! _ = page.SelectOptionAsync("[name=\"input_1_3_Role\"]", "0")        
         do! page.ClickAsync("button[type=\"submit\"]")
         //let! _ = page.WaitForSelectorAsync("button[type=\"submit\"]", PageWaitForSelectorOptions(State=WaitForSelectorState.Detached))
@@ -64,11 +73,12 @@ let tests (browser:IBrowser) =
       }
       match updatedPersonResult with
       | Ok updatedPerson ->
-        Expect.equal updatedPerson.Surname "Jane" "Surname is incorrect"
-        Expect.equal updatedPerson.Forename "Bloggs" "Forename is incorrect"
+        Expect.equal updatedPerson.Surname "Jane" "Surname has not ben updated"
+        Expect.equal updatedPerson.Forename "Bloggs" "Forename has not been updated"
         // TODO: we need to sort out the date time issue. Always translating into local timezone over serialization
         // Expect.equal updatedPerson.DateOfBirth (DateTime(1989,10,12,0,0,0,DateTimeKind.Utc)) "Date of birth is incorrect"
-        Expect.equal updatedPerson.Role Role.Administrator "Role is incorrect"
+        Expect.equal updatedPerson.Role Role.Administrator "Role has not been updated"
+        Expect.isFalse updatedPerson.IsAuthorized "IsAuthorized has not been updated"
       | Error _ ->
         Expect.equal false true "Invalid response from server - should be Person model"
     }

@@ -90,6 +90,9 @@ let getComponentName (labelOption:string option) depth index =
 let getInputComponentName inputProps =
   getComponentName (inputProps |> List.tryPick(function | InputProp.Label l -> Some l | _ -> None))
   
+let getCheckBoxComponentName inputProps =
+  getComponentName (inputProps |> List.tryPick(function | CheckBoxProp.Label l -> Some l | _ -> None))
+  
 let getDropdownComponentName dropdownProps =
   getComponentName (dropdownProps |> List.tryPick(function | DropdownProp.Label l -> Some l | _ -> None))
 

@@ -23,7 +23,7 @@ module Component =
                 Html.label [
                   prop.className "block text-sm font-medium text-gray-700"
                   prop.text label
-                  match nameOption with | Some name -> prop.for' name | _ -> ()
+                  match nameOption with | Some name -> prop.htmlFor name | _ -> ()
                 ]
               | None -> React.fragment []            
             )
@@ -128,7 +128,10 @@ module Component =
         labelOption
         select
     else
-      select
+      Html.div [
+        prop.key $"{getComponentKey componentPrefix depth cIndex}"
+        prop.children select
+      ]
     
     
 
@@ -141,6 +144,8 @@ module Component =
         | Helpers.Value.Text v -> prop.value v
         | Helpers.Value.Int v -> prop.value v
         | Helpers.Value.Date v -> prop.value v
+        | Helpers.Value.Float v -> prop.value v
+        | Helpers.Value.Boolean v -> prop.value v
       
       let propOnChange =
         props
@@ -152,6 +157,10 @@ module Component =
             (prop.onChange (fun (nv:string) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
           | Some (PropertySetter.DateTimeSetter func) ->
             (prop.onChange (fun (nv:DateTime) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
+          | Some (PropertySetter.FloatSetter func) ->
+            (prop.onChange (fun (nv:float) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
+          | Some (PropertySetter.BooleanSetter func) ->
+            (prop.onChange (fun (nv:bool) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
           | _ ->
             (prop.onChange (fun (_:Browser.Types.Event) -> setIsTouched true))
         )
@@ -191,7 +200,79 @@ module Component =
           labelOption
           editor
       else
-        editor
+        Html.div [
+          prop.key $"{getComponentKey componentPrefix depth cIndex}"
+          prop.children editor
+        ]        
+        
+  [<ReactComponent>]  
+  let CheckBox (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ props =
+      let isTouched,setIsTouched = React.useState false    
+    
+      let propOnChange =
+        props
+        |> Helpers.getCheckBoxPropertySetter
+        |> (function        
+          | Some func ->
+            (prop.onChange (fun (nv:bool) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))          
+          | _ ->
+            (prop.onChange (fun (_:Browser.Types.Event) -> setIsTouched true))
+        )
+        
+      let value =
+        Helpers.getCheckBoxPropertyGetter props
+        |> Option.map(fun getter -> getter state.Model)
+        |> Option.defaultValue false
+        
+      let validationResult =
+        Helpers.getCheckBoxValidator props
+        |> Option.map(fun validator -> validator value)
+        |> Option.defaultValue ValidationResult.Ok
+      
+      let _, errorContentColor, shadowStyling = getCommonStyling isTouched showValidationWhenNotDirty isInGrid validationResult        
+      
+      let labelOption =
+        props
+        |> List.tryPick (function | CheckBoxProp.Label label -> Some label | _ -> None)    
+      
+      Html.div [
+        prop.key $"{getComponentKey componentPrefix depth cIndex}"
+        prop.className "max-w-lg space-y-4"
+        prop.children [
+          Html.div [
+            prop.className "relative flex items-start"
+            prop.children [
+              Html.div [
+                prop.className $"flex items-center h-5"
+                prop.children [
+                  Html.input [
+                    prop.className $"focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded {shadowStyling}"
+                    prop.name (getCheckBoxComponentName props depth cIndex)
+                    prop.isChecked value
+                    prop.type' "checkbox"
+                    prop.disabled isFormDisabled
+                    propOnChange
+                  ]
+                ]
+              ]
+              match labelOption with
+              | Some label ->
+                Html.div [
+                  prop.className "ml-3 text-sm"
+                  prop.children [
+                    Html.label [
+                      prop.htmlFor (getCheckBoxComponentName props depth cIndex)
+                      prop.className "font-medium text-gray-700"
+                      prop.text label
+                    ]
+                  ]
+                ]
+              | None -> ()
+            ]
+          ]
+          (match errorContentColor with | Some (msg,color) -> Html.span [prop.className $"{color} text-sm" ; prop.text msg] | _ -> React.fragment [])
+        ]
+      ]                
 
   // Note that in order to have tables in side other tables we would need to pass down the updater and wrap it in the parent updater
   let inline Table (componentPrefix:string) (depth:int) (cIndex:int) updateState rendererState isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
@@ -336,7 +417,10 @@ module Component =
         labelOption
         wrappedTable
     else
-      wrappedTable
+      Html.div [
+        prop.key $"{getComponentKey componentPrefix depth cIndex}"
+        prop.children wrappedTable
+      ]
 
   let rec render componentPrefix depth cIndex isFormDisabled isInGrid showValidationWhenNotDirty state updateState componentDefinition =
     let renderGroup _ props =
@@ -389,6 +473,7 @@ module Component =
     Shims.GroupShim.renderer <- renderGroup
     Shims.TableShim.renderer <- Table componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty render
     Shims.DropdownShim.renderer <- Dropdown componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty
+    Shims.BooleanInputShim.renderer <- CheckBox componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty
     
     componentDefinition.render state.Model
   
