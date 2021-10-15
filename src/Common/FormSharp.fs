@@ -26,10 +26,10 @@ type HttpEndpoint<'formType> =
   }
   with
     static member Default = { Url = "" ; Verb = HttpVerb.Get ; TokenProvider = (fun _ -> None) ; Headers = List.empty ; ResponseDecoder = None }
-    static member WithGet url (decoder:string -> 'formType) = { HttpEndpoint<'formType>.Default with Url = url ; ResponseDecoder = Some decoder } |> Some
-    static member WithPost url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Post } |> Some
-    static member WithPut url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Put } |> Some
-    static member WithPatch url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Patch } |> Some
+    static member WithGet url (decoder:string -> 'formType) = { HttpEndpoint<'formType>.Default with Url = url ; ResponseDecoder = Some decoder }
+    static member WithPost url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Post }
+    static member WithPut url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Put }
+    static member WithPatch url = { HttpEndpoint<'formType>.Default with Url = url ; Verb = HttpVerb.Patch }
 
 let inline createJsonDecoder<'responseType> () =
   #if FABLE_COMPILER
@@ -144,9 +144,7 @@ and DropdownProp<'formType, 'dropdownValueType> =
   | Items of ('dropdownValueType*string) list
   | Getter of ('formType -> 'dropdownValueType)
   | Setter of ('formType -> 'dropdownValueType -> 'formType)
-  // we want this to be an option on the form options and not have the user have to specify it, though we dont need
-  // this to be an option here this allows the same helpers to work in both places
-  | HttpItems of HttpEndpoint<DropdownItem<'dropdownValueType> list> option
+  | HttpItems of HttpEndpoint<DropdownItem<'dropdownValueType> list>
   | DropdownValidator of ('dropdownValueType -> ValidationResult)
   | AllowEmpty
 and CheckBoxProp<'formType> =
@@ -332,7 +330,19 @@ type Collection private () =
 type Button =
   | Save
   | Cancel
-    
+           
+type FormProp<'formType> =
+  | OnComplete of ('formType -> unit)
+  | OnCancel of ('formType -> unit)
+  | OnChange of ('formType -> unit)
+  | Buttons of (Button list)
+  | LoadFromUrl of HttpEndpoint<'formType>
+  | SaveToUrl of HttpEndpoint<'formType>
+  | Load of (unit->System.Threading.Tasks.Task<'formType>)
+  | Save of ('formType -> System.Threading.Tasks.Task)
+  | ApiTokenProvider of (unit -> string)
+  | ShowValidationWhenNotDirty
+           
 type FormOptions<'formType> =
   { // called then the save button is pressed and after a successful save
     OnComplete: 'formType -> unit
@@ -343,9 +353,13 @@ type FormOptions<'formType> =
     // the buttons to show
     Buttons: Button list
     // if not None then this will be called on load to obtain the state
-    LoadFromUrl: HttpEndpoint<'formType> option
+    LoadFromUrl: HttpEndpoint<'formType> option    
     // it not None then this will be called when save is pressed to save the state
     SaveToUrl: HttpEndpoint<'formType> option
+    // if specified will load using the given function 
+    Load: (unit->System.Threading.Tasks.Task<'formType>) option
+    // if specified will save using the given function
+    Save: ('formType -> System.Threading.Tasks.Task) option
     // if Some then will be called to get the latest token at the point of API call
     ApiTokenProvider: (unit -> string) option
     // If true then will show validation messages before form controls are dirty when appropriate
@@ -359,9 +373,26 @@ type FormOptions<'formType> =
         Buttons = [ Button.Save ]
         LoadFromUrl = None
         SaveToUrl = None
+        Load = None
+        Save = None
         ApiTokenProvider = None
         ShowValidationWhenNotDirty = false
-      }:FormOptions<'formType>    
+      }:FormOptions<'formType>
+    static member FromProps formProps =
+      formProps
+      |> List.fold (fun state prop ->
+        match prop with
+        | OnComplete value -> { state with OnComplete = value }
+        | OnCancel value -> { state with OnCancel = value }
+        | OnChange value -> { state with OnChange = value }
+        | Buttons value -> { state with Buttons = value }
+        | LoadFromUrl value -> { state with LoadFromUrl = Some value }
+        | SaveToUrl value -> { state with SaveToUrl = Some value }
+        | Load value -> { state with Load = Some value }
+        | Save value -> { state with Save = Some value }
+        | ApiTokenProvider value -> { state with ApiTokenProvider = Some value }
+        | ShowValidationWhenNotDirty -> { state with ShowValidationWhenNotDirty = true }
+      ) FormOptions.Default
 
 
 module Helpers =

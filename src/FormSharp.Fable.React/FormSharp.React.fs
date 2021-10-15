@@ -13,7 +13,8 @@ module ReactExtensions =
     static member useForm<'formType>(initialState: 'formType,
                                      formDefinition: IFormComponent<'formType> list,
                                      renderer: string -> RendererState<'formType> -> (RendererState<'formType> -> unit) -> Button list -> bool -> (RendererState<'formType> -> Promise<unit>) -> (RendererState<'formType> -> Promise<unit>) -> IFormComponent<'formType> list -> Fable.React.ReactElement,
-                                     options:FormOptions<'formType>) =
+                                     formProps:FormProp<'formType> list) =
+      let options = FormOptions<'formType>.FromProps formProps
       let state, setState = React.useState({
         Model = initialState
         ComponentsLoading = if options.LoadFromUrl |> Option.isSome then 1 else 0 

@@ -20,12 +20,12 @@ let Page () =
       Person.Empty,
       formDefinition,
       Tailwind.Form,
-      { FormOptions.Default with
-          SaveToUrl = HttpEndpoint.WithPut "http://localhost:5000/person"
-          OnChange = (fun state -> console.log state)
-          OnComplete = (fun _ -> setIsComplete true)
-          LoadFromUrl = HttpEndpoint<Person>.WithGet $"http://localhost:5000/person/{resourceId}" (createJsonDecoder ())
-      }
+      [
+        LoadFromUrl (HttpEndpoint.WithGet $"http://localhost:5000/person/{resourceId}" (createJsonDecoder ()))
+        SaveToUrl (HttpEndpoint.WithPut "http://localhost:5000/person")
+        OnChange (fun state -> console.log state)
+        OnComplete (fun _ -> setIsComplete true)
+      ]      
     ) 
   
   Layout.page [

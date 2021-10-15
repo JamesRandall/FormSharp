@@ -56,7 +56,7 @@ module Component =
     React.useEffect((fun _ ->
       let endpointOption = props |> List.tryPick(function | DropdownProp.HttpItems endpoint -> Some endpoint | _ -> None)
       match endpointOption with
-      | Some (Some endpoint) -> promise {
+      | Some endpoint -> promise {
           setIsLoading true
           let! result = executeHttpWithResult endpoint None
           match result with
@@ -329,7 +329,7 @@ module Component =
               updateState { rendererState with Model = newState }
             let cells =
               columns
-              |> List.mapi(fun cellIndex (_, contentComponent) ->
+              |> List.mapi(fun _ (_, contentComponent) ->
                 Html.td [
                   prop.className "px-6 py-2 whitespace-nowrap text-gray-900"
                   prop.children [
