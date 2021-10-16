@@ -7,7 +7,7 @@ open Helpers.State
 let formDefinition = [
   Group [
     Title "Basic details"
-    Description "We need a few personal details from you"
+    Description "Please update your personal details"
     Children [
       TextInput [
         InputProp.Getter (fun person -> person.Surname)

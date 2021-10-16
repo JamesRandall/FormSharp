@@ -112,7 +112,7 @@ module Component =
             prop.disabled (isFormDisabled || isLoading)
             prop.children (
               items
-              |> List.mapi(fun i (_,description) -> Html.option [ prop.value i ; prop.text description ])
+              |> List.mapi(fun i (_,description) -> Html.option [ prop.key i ; prop.value i ; prop.text description ])
             )
           ]
           match errorContentColor with | Some (msg,color) -> Html.span [prop.className $"{color} text-sm" ; prop.text msg] | _ -> React.fragment []
@@ -282,7 +282,7 @@ module Component =
       |> Option.defaultValue []
     let headers =
       columns
-      |> List.map(fun (columnProps, _) ->
+      |> List.mapi(fun i (columnProps, _) ->
         let title =
           columnProps
           |> List.tryPick(function | TableColumnProp.Title t -> Some t | _ -> None)
@@ -290,6 +290,7 @@ module Component =
         Html.th [
           prop.className "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
           prop.text title
+          prop.key i
         ]
       )
     let collection =
@@ -329,8 +330,9 @@ module Component =
               updateState { rendererState with Model = newState }
             let cells =
               columns
-              |> List.mapi(fun _ (_, contentComponent) ->
+              |> List.mapi(fun i (_, contentComponent) ->
                 Html.td [
+                  prop.key i
                   prop.className "px-6 py-2 whitespace-nowrap text-gray-900"
                   prop.children [
                     renderComponent componentPrefix (depth+1) cIndex isFormDisabled true showValidationWhenNotDirty childRenderState updateRowState contentComponent
@@ -528,21 +530,23 @@ let Form formId
             ])
             ::
             (buttons
-            |> List.map(fun button ->
+            |> List.mapi(fun i button ->
               match button with
               | Button.Save ->
                 Html.button [
-                  prop.className "bg-blue-600 text-white rounded-md pt-1 pb-2 px-6 hover:bg-blue-400 disabled:bg-blue-400" 
+                  prop.className "bg-blue-600 text-white rounded-md py-1 px-6 hover:bg-blue-400 disabled:bg-blue-400" 
                   prop.text "Save"
                   prop.type' "submit"
                   prop.disabled isButtonDisabled
-                  prop.onClick (fun _ -> saveFunc state |> ignore)                  
+                  prop.onClick (fun _ -> saveFunc state |> ignore)
+                  prop.key i
                 ]
               | Button.Cancel ->
                 Html.button [
                   prop.className "bg-orange-600 text-white rounded-md py-1 px-6 hover:bg-orange-400 disabled:bg-orange-400" 
                   prop.text "Cancel"
                   prop.disabled isButtonDisabled
+                  prop.key i
                 ]
             ))
           )

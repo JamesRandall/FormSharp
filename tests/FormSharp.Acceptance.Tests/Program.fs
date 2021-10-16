@@ -16,6 +16,7 @@ let tests (browser:IBrowser) =
     let! page = context.NewPageAsync()
     let! _ = page.RunAndWaitForResponseAsync((fun () -> unitTask {
       let! _ = page.GotoAsync("http://localhost:8080/")
+      do! page.ClickAsync("#btn-http-endpoint")
       ()
     }), "http://localhost:5000/person/0eb0f488-832f-4144-8492-0cfe73200347")
     let! _ = page.WaitForSelectorAsync ("option", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
@@ -24,7 +25,7 @@ let tests (browser:IBrowser) =
   }
   
   // Our UI modifies the same server side item so we need to run these in sequence to get consistent results
-  testSequenced  <| testList "Loading and updating" [
+  testSequenced  <| testList "Loading and updating using HTTP endpoints" [
     testTask "Presents loaded content" {
       let! (result:string list) = task {
         let! page = loadInitialPage ()        

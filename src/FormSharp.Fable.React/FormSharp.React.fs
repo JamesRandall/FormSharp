@@ -28,8 +28,8 @@ module ReactExtensions =
       let updateState state =
         setState state
         options.OnChange state.Model
-      let saveFunc = options.SaveToUrl |> createSaveFunction options setState
-      let loadFunc = options.LoadFromUrl |> createLoadFunction setState
+      let saveFunc = createSaveFunction options setState
+      let loadFunc = createLoadFunction options setState
       let composedRenderer = renderer formId state updateState options.Buttons options.ShowValidationWhenNotDirty saveFunc loadFunc
       
       Html.div (formDefinition |> composedRenderer)    

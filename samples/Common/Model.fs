@@ -3,6 +3,7 @@ module Model
 open FormSharp.Core
 open System
 
+
 type Comment =
   { Id: Guid
     Note: string
@@ -18,6 +19,11 @@ type Comment =
 type Role =
   | Administrator
   | Shopper
+  
+type RoleDropdownItem =
+  { Value: Role
+    Label: string
+  }
 
 type Person =
   { Id: Guid
@@ -33,10 +39,7 @@ type Person =
     Surname = String.Empty
     Forename = String.Empty
     DateOfBirth = DateTime.Now.AddYears(-25)
-    Comments = []
-      //{ Id = Guid.NewGuid() ; Note = "Some text" ; RecordedAt = DateTime.Now }
-      //{ Id = Guid.NewGuid() ; Note = "Some different text" ; RecordedAt = DateTime.Now.AddDays(-1.) }
-    //]
+    Comments = []      
     Role = Role.Shopper
     IsAuthorized = false
   }
@@ -54,3 +57,10 @@ let minimumOf18YearsOld (dateOfBirth:DateTime) =
     ValidationResult.Error "Must be at least 18 years old"
   else
     ValidationResult.Ok
+
+// interface for the Fable Remoting demonstration
+type IPersonStore = {
+  get : Guid -> Async<Result<Person,string>>
+  update : Person -> Async<unit>
+  getRoles: unit -> Async<RoleDropdownItem list>
+}

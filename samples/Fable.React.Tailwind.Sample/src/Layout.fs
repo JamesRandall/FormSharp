@@ -9,7 +9,12 @@ let page (content:ReactElement list) =
       Html.div [ prop.className "col-span-2" ]
       Html.div [
         prop.className "col-span-8"
-        prop.children content
+        prop.children (
+          content
+          |> List.mapi(fun i element ->
+            Html.div [ prop.className "mb-4" ; prop.key i ; prop.children element]
+          )
+        )
       ]
       Html.div [ prop.className "col-span-2" ]      
     ]

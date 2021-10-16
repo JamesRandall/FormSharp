@@ -1,5 +1,6 @@
 ﻿module FormSharp.Fable.Core
 
+open Fable.Core
 open Fable.Core.JS
 open Fetch.Types
 open FormSharp.Core
@@ -51,34 +52,56 @@ let inline executeHttp httpEndpoint bodyOption = promise {
   | Error ex -> return Error $"Error with error {ex}"
 }
 
-let inline createLoadFunction setState httpEndpointOption =
-  match httpEndpointOption with
-  | None ->
-    (fun (rendererState:RendererState<_>) -> promise { setState ( rendererState.ComponentFinishedLoading () ) })
-  | Some endpoint -> (fun (rendererState:RendererState<_>) -> promise {
-      setState ( rendererState.ComponentLoading () )
-      let! result = executeHttpWithResult endpoint None
-      match result with
-      | Ok model ->
-        setState { rendererState.ComponentFinishedLoading () with Model = model }
-      | Error e ->
-        console.error e
-        setState { rendererState.ComponentFinishedLoading () with ErrorMessage = Some "Unable to load resource" }
-    })
+let inline createLoadFunction options setState =
+  let processResult (rendererState:RendererState<_>) result =
+    match result with
+    | Ok model ->
+      setState { rendererState.ComponentFinishedLoading () with Model = model }
+    | Error e ->
+      console.error e
+      setState { rendererState.ComponentFinishedLoading () with ErrorMessage = Some "Unable to load resource" }
   
-let inline createSaveFunction options setState httpEndpointOption =
+  match options.Load with
+  | Some asyncLoadFunc ->
+    (fun (rendererState:RendererState<_>) -> promise {
+      setState ( rendererState.ComponentLoading () )
+      let! result = asyncLoadFunc () |> Async.StartAsPromise
+      result |> processResult rendererState
+    })    
+  | None ->
+    match options.LoadFromUrl with    
+    | Some endpoint -> (fun (rendererState:RendererState<_>) -> promise {
+        setState ( rendererState.ComponentLoading () )
+        let! result = executeHttpWithResult endpoint None
+        result |> processResult rendererState
+      })
+    | None ->
+      (fun (rendererState:RendererState<_>) -> promise { setState ( rendererState.ComponentFinishedLoading () ) })
+  
+let inline createSaveFunction options setState =
   let saveError = "Unable to save, please try again."
-  match httpEndpointOption with
-  | None -> (fun rendererState -> promise { options.OnComplete rendererState.Model })
-  | Some endpoint -> (fun rendererState -> promise {
+  let processResult (rendererState:RendererState<_>) result =
+    match result with
+    | Ok _ ->
+      setState({rendererState with IsSaving = false })
+      options.OnComplete rendererState.Model
+    | Error _ -> setState({rendererState with IsSaving = false ; ErrorMessage = Some saveError })
+    
+  match options.Save with
+  | Some asyncSaveFunc ->
+    (fun rendererState -> promise {
       setState({rendererState with IsSaving = true ; ErrorMessage = None})
-      let! result = Some rendererState.Model |> executeHttp endpoint                     
-      match result with
-      | Ok _ ->
-        setState({rendererState with IsSaving = false })
-        options.OnComplete rendererState.Model
-      | Error _ -> setState({rendererState with IsSaving = false ; ErrorMessage = Some saveError })
+      let! result = asyncSaveFunc rendererState.Model |> Async.StartAsPromise                     
+      result |> processResult rendererState
     })
+  | None ->
+    match options.SaveToUrl with
+    | None -> (fun rendererState -> promise { options.OnComplete rendererState.Model })
+    | Some endpoint -> (fun rendererState -> promise {
+        setState({rendererState with IsSaving = true ; ErrorMessage = None})
+        let! result = Some rendererState.Model |> executeHttp endpoint                     
+        result |> processResult rendererState
+      })
 
 let getComponentName (labelOption:string option) depth index =
   match labelOption with

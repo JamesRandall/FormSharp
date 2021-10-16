@@ -338,8 +338,8 @@ type FormProp<'formType> =
   | Buttons of Button list
   | LoadFromUrl of HttpEndpoint<'formType>
   | SaveToUrl of HttpEndpoint<'formType>
-  | Load of (unit->System.Threading.Tasks.Task<'formType>)
-  | Save of ('formType -> System.Threading.Tasks.Task)
+  | Load of (unit -> Async<Result<'formType,string>>)
+  | Save of ('formType -> Async<Result<unit,string>>)
   | ApiTokenProvider of (unit -> string)
   | ShowValidationWhenNotDirty
            
@@ -357,9 +357,9 @@ type FormOptions<'formType> =
     // it not None then this will be called when save is pressed to save the state
     SaveToUrl: HttpEndpoint<'formType> option
     // if specified will load using the given function 
-    Load: (unit->System.Threading.Tasks.Task<'formType>) option
+    Load: (unit -> Async<Result<'formType,string>>) option
     // if specified will save using the given function
-    Save: ('formType -> System.Threading.Tasks.Task) option
+    Save: ('formType -> Async<Result<unit,string>>) option
     // if Some then will be called to get the latest token at the point of API call
     ApiTokenProvider: (unit -> string) option
     // If true then will show validation messages before form controls are dirty when appropriate

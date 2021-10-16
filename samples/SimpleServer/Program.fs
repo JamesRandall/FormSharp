@@ -7,11 +7,8 @@ open Saturn
 open Giraffe
 open Model
 open FSharp.Control.Tasks
-
-type DropdownItem =
-  { Value: Role
-    Label: string
-  }
+open Fable.Remoting.Server
+open Fable.Remoting.Giraffe
 
 let mutable personRepository = [
   { Id = Guid.Parse("0EB0F488-832F-4144-8492-0CFE73200347")
@@ -23,6 +20,37 @@ let mutable personRepository = [
     IsAuthorized = true
   }  
 ]
+
+let fableRemotingPersonStore : IPersonStore = {
+  get = (fun personId -> async {
+    // just a little delay so we can see the activity indicator on the clients
+    do! Async.Sleep(TimeSpan.FromSeconds(0.5))
+    
+    return
+      personRepository
+      |> List.tryFind(fun p -> p.Id = personId)
+      |> Option.map (fun person -> Ok person)
+      |> Option.defaultValue (Error "Not found")
+  })
+  update = (fun updatedPerson -> async {
+    personRepository <- personRepository |> List.map(fun p -> if p.Id = updatedPerson.Id then updatedPerson else p)
+    Console.WriteLine(updatedPerson)
+    // just a little delay so we can see the activity indicator on the clients
+    do! Async.Sleep(TimeSpan.FromSeconds(0.5))
+  })
+  getRoles = (fun () -> async {
+    let items = [
+      { Value = Role.Administrator ; Label = "Administrator" }
+      { Value = Role.Shopper ; Label = "Shopper" }
+    ]
+    return items
+  })
+}
+
+let fableApp : HttpHandler =
+  Remoting.createApi()
+  |> Remoting.fromValue fableRemotingPersonStore
+  |> Remoting.buildHttpHandler
 
 let getPerson (id:Guid) next ctx = task {
   // just a little delay so we can see the activity indicator on the clients
@@ -71,9 +99,11 @@ let apiRouter = router {
 }  
 
 let app = application {
-  use_cors "cors_policy" (fun b -> b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() |> ignore)
+  use_cors "cors_policy" (fun b -> b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() |> ignore)  
   use_json_serializer (Thoth.Json.Giraffe.ThothSerializer())
-  use_router apiRouter
+  use_router (choose [
+    fableApp ; apiRouter
+  ])
 }
 
 run app
