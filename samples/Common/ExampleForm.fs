@@ -27,12 +27,11 @@ let formDefinition = [
         Validate minimumOf18YearsOld
         Label "Date of birth"
       ]
-      Dropdown [
-        DropdownProp.Getter (fun person -> person.Role)
-        DropdownProp.Setter (fun person newValue -> { person with Role = newValue })
+      Select [
+        SelectProp.Getter (fun person -> person.Role)
+        SelectProp.Setter (fun person newValue -> { person with Role = newValue })
         HttpItems (HttpEndpoint<DropdownItem<Role> list>.WithGet $"http://localhost:5000/roles" (createJsonDecoder ()))
-        AllowEmpty
-        DropdownProp.Label "Role"
+        SelectProp.Label "Role"
       ]
       CheckBox [
         CheckBoxProp.CheckBoxGetter (fun person -> person.IsAuthorized)

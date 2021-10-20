@@ -125,6 +125,10 @@ type DropdownItem<'dropdownValueType> =
   { Value: 'dropdownValueType
     Label: string
   }
+  
+type SelectKind =
+  | Dropdown
+  | RadioSet
 
 type GroupProp<'formType> =
   | Title of string
@@ -139,14 +143,16 @@ and TableProp<'formType, 'collectionItemType> =
   | AddButton of ('formType -> 'collectionItemType list -> 'collectionItemType)
   | DeleteButton
   | NoItemsMessage of string
-and DropdownProp<'formType, 'dropdownValueType> =
+and SelectProp<'formType, 'dropdownValueType> =
   | Label of string
   | Items of ('dropdownValueType*string) list
   | Getter of ('formType -> 'dropdownValueType)
   | Setter of ('formType -> 'dropdownValueType -> 'formType)
   | HttpItems of HttpEndpoint<DropdownItem<'dropdownValueType> list>
   | DropdownValidator of ('dropdownValueType -> ValidationResult)
-  | AllowEmpty
+  // radio buttons and dropdowns aren't available in all targets so
+  // on some targets you may ask for a radioset but get a dropdown 
+  | TypeHint of SelectKind
 and CheckBoxProp<'formType> =
   | Label of string
   | CheckBoxGetter of ('formType -> bool)
@@ -279,11 +285,11 @@ module Shims =
       member ti.children = []
       member ti.validate _ = ValidationResult.Ok
       
-  type DropdownShim<'formType,'dropdownValueType> (props:DropdownProp<'formType, 'dropdownValueType> list) =
+  type DropdownShim<'formType,'dropdownValueType> (props:SelectProp<'formType, 'dropdownValueType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> DropdownProp<'formType, 'dropdownValueType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):'formType -> SelectProp<'formType, 'dropdownValueType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> DropdownProp<'formType, 'dropdownValueType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state):'formType -> SelectProp<'formType, 'dropdownValueType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
@@ -297,7 +303,7 @@ let Group<'formType> properties = Shims.GroupShim properties :> IFormComponent<'
 let DateInput<'formType> properties = Shims.DateInputShim properties :> IFormComponent<'formType>
 let Table<'formType, 'collectionItemType> (properties:TableProp<'formType, 'collectionItemType> list)
   = Shims.TableShim properties :> IFormComponent<'formType>
-let Dropdown<'formType, 'dropdownValueType> (properties:DropdownProp<'formType, 'dropdownValueType> list)
+let Select<'formType, 'dropdownValueType> (properties:SelectProp<'formType, 'dropdownValueType> list)
   = Shims.DropdownShim properties :> IFormComponent<'formType>
 
        
@@ -416,9 +422,9 @@ module Helpers =
   let getInputPropertyGetter props = props |> List.tryPick(function | InputProp.InputGetter getter -> Some getter | _ -> None)    
   let getInputPropertySetter props = props |> List.tryPick(function | InputProp.InputSetter setter -> Some setter | _ -> None)
   
-  let getDropdownValidator props = props |> List.tryPick(function | DropdownProp.DropdownValidator validator -> Some validator | _ -> None)
-  let getDropdownPropertyGetter props = props |> List.tryPick(function | DropdownProp.Getter getter -> Some getter | _ -> None)
-  let getDropdownPropertySetter props = props |> List.tryPick(function | DropdownProp.Setter setter -> Some setter | _ -> None)
+  let getDropdownValidator props = props |> List.tryPick(function | SelectProp.DropdownValidator validator -> Some validator | _ -> None)
+  let getDropdownPropertyGetter props = props |> List.tryPick(function | SelectProp.Getter getter -> Some getter | _ -> None)
+  let getDropdownPropertySetter props = props |> List.tryPick(function | SelectProp.Setter setter -> Some setter | _ -> None)
   
   let getCheckBoxValidator props = props |> List.tryPick(function | CheckBoxProp.CheckBoxValidator validator -> Some validator | _ -> None)    
   let getCheckBoxPropertyGetter props = props |> List.tryPick(function | CheckBoxProp.CheckBoxGetter getter -> Some getter | _ -> None)    

@@ -117,6 +117,6 @@ let getCheckBoxComponentName inputProps =
   getComponentName (inputProps |> List.tryPick(function | CheckBoxProp.Label l -> Some l | _ -> None))
   
 let getDropdownComponentName dropdownProps =
-  getComponentName (dropdownProps |> List.tryPick(function | DropdownProp.Label l -> Some l | _ -> None))
+  getComponentName (dropdownProps |> List.tryPick(function | SelectProp.Label l -> Some l | _ -> None))
 
 let getComponentKey prefix depth index = $"{prefix}_{depth}_{index}"  

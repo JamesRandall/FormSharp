@@ -45,16 +45,16 @@ module Component =
       (if isInGrid then "border-gray-100" else "border-gray-300"), None, shadowStyling
     
   [<ReactComponent>]
-  let Dropdown (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ (props:DropdownProp<'formType, 'dropdownValueType> list) =
+  let Dropdown (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ (props:SelectProp<'formType, 'dropdownValueType> list) =
     let items,setItems =
       React.useState(
-        props |> List.tryPick(function | DropdownProp.Items items -> Some items | _ -> None) |> Option.defaultValue []
+        props |> List.tryPick(function | SelectProp.Items items -> Some items | _ -> None) |> Option.defaultValue []
       )
     let isTouched, setIsTouched = React.useState false
-    let isLoading, setIsLoading = React.useState (props |> List.tryFind(function | DropdownProp.HttpItems _ -> true | _ -> false) |> Option.isSome)
+    let isLoading, setIsLoading = React.useState (props |> List.tryFind(function | SelectProp.HttpItems _ -> true | _ -> false) |> Option.isSome)
     
     React.useEffect((fun _ ->
-      let endpointOption = props |> List.tryPick(function | DropdownProp.HttpItems endpoint -> Some endpoint | _ -> None)
+      let endpointOption = props |> List.tryPick(function | SelectProp.HttpItems endpoint -> Some endpoint | _ -> None)
       match endpointOption with
       | Some endpoint -> promise {
           setIsLoading true
@@ -95,7 +95,7 @@ module Component =
     
     let labelOption =
       props
-      |> List.tryPick (function | DropdownProp.Label label -> Some label | _ -> None)    
+      |> List.tryPick (function | SelectProp.Label label -> Some label | _ -> None)    
     let hasLabel = labelOption |> Option.isSome
 
     let borderColor, errorContentColor, shadowStyling = getCommonStyling isTouched showValidationWhenNotDirty isInGrid validationResult
