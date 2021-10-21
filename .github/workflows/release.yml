@@ -4,6 +4,7 @@ on:
     types: [created]
 
 # This release script works on the basis that releases are named with the pattern v0.0.0
+# which will result in a ref variable of refs/tags/v0.0.0
 jobs:
   buildandtest:
     runs-on: ubuntu-latest
@@ -21,10 +22,10 @@ jobs:
     # when working build test step in here
 
     - name: Package
-      run: ./pack.sh "${GITHUB_REF:1}"
+      run: ./pack.sh "${GITHUB_REF:11}"
 
     - name: Push
-      run: dotnet nuget push "packages/FormSharp.Fable.React.${GITHUB_REF:1}.nupkg" --api-key ${{ secrets.NUGET_KEY }}
+      run: dotnet nuget push "packages/FormSharp.Fable.React.${GITHUB_REF:11}.nupkg" --api-key ${{ secrets.NUGET_KEY }}
 
     - name: Output package as artifact
       if: always()
