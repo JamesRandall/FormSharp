@@ -34,16 +34,15 @@ Running the tests requires the installation of [Playwright for .NET](https://pla
 
 ## Things to do
 
-In a rough order.
+~~In a rough order.~~
+Order is wherever fun takes me!
 
-* Automated tests - wip, using PlayWright
-* GitHub Action for build, test and package release
+* Documentation
+* GitHub Action for package release and initial package publish
 * Token injection for API calls (skeleton is their)
-* Add support for loading, saving etc. from Fable Remoting using friendly syntax
-* Transformers at point of load and save
-* Additional components - check box, radio buttons, text areas
-* Support injection of custom components in forms
+* Additional components - radio buttons, text areas
 * Add a Bootstrap renderer to the React package
+* Add a Bulma renderer to the React package
 * Add a vanilla HTML (no React) package (Tailwind and Bootstrap)
 * Bring the Spectre support into the public repo from my poc
 
