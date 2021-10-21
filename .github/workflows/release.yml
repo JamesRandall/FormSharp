@@ -1,4 +1,4 @@
-name: Build and test
+name: Release NuGet packages
 on: release
 
 # This release script works on the basis that releases are named with the pattern v0.0.0
