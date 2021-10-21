@@ -1,6 +1,6 @@
 # FormSharp
 
-![Build](https://github.com/JamesRandall/FormSharp/actions/workflows/buildandtest/badge.svg)
+![Build](https://github.com/JamesRandall/FormSharp/actions/workflows/buildandtest.yml/badge.svg)
 
 **This is very much work in progress - here be killer bunnies, but they're quickly being pacified**
 
