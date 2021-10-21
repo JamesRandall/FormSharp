@@ -1,5 +1,7 @@
 # FormSharp
 
+![Build](https://github.com/JamesRandall/FormSharp/actions/workflows/buildandtest/badge.svg)
+
 **This is very much work in progress - here be killer bunnies, but they're quickly being pacified**
 
 ![Alt text](./images/bunny.jpg?raw=true "Killer bunny")
