@@ -25,7 +25,7 @@ jobs:
       run: ./pack.sh "${GITHUB_REF:11}"
 
     - name: Push
-      run: dotnet nuget push "packages/FormSharp.Fable.React.${GITHUB_REF:11}.nupkg" --api-key ${{ secrets.NUGET_KEY }}
+      run: dotnet nuget push "packages/FormSharp.Fable.React.${GITHUB_REF:11}.nupkg" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json
 
     - name: Output package as artifact
       if: always()
