@@ -1,5 +1,7 @@
 module ExampleForm
 
+open Feliz
+open Browser
 open FormSharp.Core
 open Model
 open Helpers.State
@@ -15,6 +17,15 @@ let formDefinition = [
         Validate requiredNameValidator
         Label "Surname"
       ]
+      #if FABLE_COMPILER
+      Custom (fun props ->
+        Html.input [
+          prop.className "text-sm text-center italic bg-blue-100"
+          prop.value props.Model.Surname
+          prop.onChange (fun (v:string) -> console.log v ; props.UpdateModel { props.Model with Surname = v })
+        ]
+      )
+      #endif
       TextInput [
         InputProp.Getter (fun person -> person.Forename)
         InputProp.Setter (fun person value -> { person with Forename = value })
@@ -59,7 +70,7 @@ let formDefinition = [
             ]
           )
         ]
-      ]
+      ]      
     ]
   ]
 ]

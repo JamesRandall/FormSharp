@@ -5,19 +5,6 @@ open Fable.Core.JS
 open Fetch.Types
 open FormSharp.Core
 
-type RendererState<'formType> =
-  { Model: 'formType
-    ComponentsLoading: int
-    IsSaving: bool
-    IsDisabled: bool
-    IsDirty: bool
-    ErrorMessage: string option
-  }
-  member x.IsLoading = x.ComponentsLoading > 0
-  member x.ComponentLoading () = { x with ComponentsLoading = x.ComponentsLoading + 1 }
-  member x.ComponentFinishedLoading () =
-    { x with ComponentsLoading = if x.ComponentsLoading > 0 then x.ComponentsLoading - 1 else 0 }
-  
 let convertToHttpMethod verb =
   match verb with
   | HttpVerb.Get -> HttpMethod.GET

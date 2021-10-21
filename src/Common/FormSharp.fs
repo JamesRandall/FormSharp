@@ -105,12 +105,42 @@ type Collection<'collectionItemType> =
   | NoCollection
   | WithCollection of 'collectionItemType
 
+type CustomComponentProps<'formType> =
+  { Model: 'formType
+    ComponentsLoading: int
+    IsSaving: bool
+    IsDisabled: bool
+    IsDirty: bool
+    UpdateModel: 'formType -> unit
+    ComponentDepth: int
+    ComponentIndex: int
+  }
+
+type RendererState<'formType> =
+  { Model: 'formType
+    ComponentsLoading: int
+    IsSaving: bool
+    IsDisabled: bool
+    IsDirty: bool
+    ErrorMessage: string option
+  }
+  member x.IsLoading = x.ComponentsLoading > 0
+  member x.ComponentLoading () = { x with ComponentsLoading = x.ComponentsLoading + 1 }
+  member x.ComponentFinishedLoading () =
+    { x with ComponentsLoading = if x.ComponentsLoading > 0 then x.ComponentsLoading - 1 else 0 }
+
+type RenderProps<'formType> =
+  { UpdateModel: 'formType -> unit
+    ComponentDepth: int
+    ComponentIndex: int
+  }
+
 // See my comments on Shims below
 type IFormComponent<'formType> =
   #if FABLE_COMPILER
-  abstract member render : 'formType -> ReactElement
+  abstract member render : RendererState<'formType> -> RenderProps<'formType> -> ReactElement
   #else
-  abstract member render : 'formType -> 'formType
+  abstract member render : RendererState<'formType> -> RenderProps<'formType> -> 'formType
   #endif
   abstract member children : IFormComponent<'formType> list
   abstract member validate : obj -> ValidationResult
@@ -187,7 +217,6 @@ and InputProp<'formType> =
   static member Setter<'formType>(setter:'formType->bool->'formType) =
     InputSetter (PropertySetter<'formType>.BooleanSetter setter)
   
-  
 module Shims =
   (*
   Differ controls require different generic parameters - specifically collections need both a form type and
@@ -222,39 +251,39 @@ module Shims =
   
   type TextInputShim<'formType> (props:InputProp<'formType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> InputProp<'formType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> InputProp<'formType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> InputProp<'formType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> InputProp<'formType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = ti.props |> TextInputShim.renderer state
+      member ti.render state _ = ti.props |> TextInputShim.renderer state
       member ti.children = []
       member ti.validate model = unbox<'formType> model |> validateFormProps ti.props
       //member ti.validate<'formValidationType> (model:'formValidationType) : ValidationResult = model |> validateFormProps ti.props
       
   type BooleanInputShim<'formType> (props:CheckBoxProp<'formType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> CheckBoxProp<'formType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> CheckBoxProp<'formType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> CheckBoxProp<'formType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> CheckBoxProp<'formType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = ti.props |> BooleanInputShim.renderer state
+      member ti.render state _ = ti.props |> BooleanInputShim.renderer state
       member ti.children = []
       member ti.validate model = ValidationResult.Ok // TODO
       //member ti.validate<'formValidationType> (model:'formValidationType) : ValidationResult = model |> validateFormProps ti.props
     
   type GroupShim<'formType> (props:GroupProp<'formType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> GroupProp<'formType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> GroupProp<'formType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> GroupProp<'formType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> GroupProp<'formType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = GroupShim.renderer state ti.props
+      member ti.render state _ = GroupShim.renderer state ti.props
       member ti.children =
         ti.props
         |> List.tryPick(function | GroupProp.Children children -> Some children | _ -> None)        
@@ -263,68 +292,77 @@ module Shims =
     
   type DateInputShim<'formType> (props:InputProp<'formType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> InputProp<'formType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> InputProp<'formType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> InputProp<'formType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> InputProp<'formType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = DateInputShim.renderer state ti.props
+      member ti.render state _ = DateInputShim.renderer state ti.props
       member ti.children = []
       member ti.validate model = unbox<'formType> model |> validateFormProps ti.props
     
   type TableShim<'formType,'collectionItemType> (props:TableProp<'formType, 'collectionItemType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> TableProp<'formType, 'collectionItemType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> TableProp<'formType, 'collectionItemType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> TableProp<'formType, 'collectionItemType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> TableProp<'formType, 'collectionItemType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = TableShim.renderer state ti.props
+      member ti.render state _ = TableShim.renderer state ti.props
       member ti.children = []
       member ti.validate _ = ValidationResult.Ok
       
   type DropdownShim<'formType,'dropdownValueType> (props:SelectProp<'formType, 'dropdownValueType> list) =
     #if FABLE_COMPILER
-    static member val renderer = ((fun _ _ -> Html.div []):'formType -> SelectProp<'formType, 'dropdownValueType> list -> ReactElement) with get, set
+    static member val renderer = ((fun _ _ -> Html.div []):RendererState<'formType> -> SelectProp<'formType, 'dropdownValueType> list -> ReactElement) with get, set
     #else
-    static member val renderer = ((fun state _ -> state):'formType -> SelectProp<'formType, 'dropdownValueType> list -> 'formType) with get, set
+    static member val renderer = ((fun state _ -> state.Model):RendererState<'formType> -> SelectProp<'formType, 'dropdownValueType> list -> 'formType) with get, set
     #endif
     member val props = props
     interface IFormComponent<'formType> with
-      member ti.render state = DropdownShim.renderer state ti.props
+      member ti.render state _ = DropdownShim.renderer state ti.props
       member ti.children = []
       member ti.validate _ = ValidationResult.Ok // TODO
+    
+  #if FABLE_COMPILER
+  type CustomShim<'formType> (elementFunc:CustomComponentProps<'formType> -> Fable.React.ReactElement) =
+    static member val renderer =
+      (fun (_:CustomComponentProps<'formType>) (_:CustomComponentProps<'formType> -> ReactElement) -> Html.div []) with get, set
+    member val elementFunc = elementFunc
+    interface IFormComponent<'formType> with
+      member ti.render state props =
+        let customComponentProps =
+          { Model = state.Model
+            ComponentsLoading = state.ComponentsLoading
+            IsSaving = state.IsSaving
+            IsDisabled = state.IsDisabled
+            IsDirty = state.IsDirty
+            UpdateModel = props.UpdateModel
+            ComponentDepth = props.ComponentDepth
+            ComponentIndex = props.ComponentIndex
+          }
+        CustomShim.renderer customComponentProps elementFunc
+      member ti.children = []
+      member ti.validate _ = ValidationResult.Ok // TODO
+  #endif
 
 let TextInput<'formType> properties = Shims.TextInputShim properties :> IFormComponent<'formType>
 let CheckBox<'formType> properties = Shims.BooleanInputShim properties :> IFormComponent<'formType>
 let Group<'formType> properties = Shims.GroupShim properties :> IFormComponent<'formType>
 let DateInput<'formType> properties = Shims.DateInputShim properties :> IFormComponent<'formType>
-let Table<'formType, 'collectionItemType> (properties:TableProp<'formType, 'collectionItemType> list)
-  = Shims.TableShim properties :> IFormComponent<'formType>
-let Select<'formType, 'dropdownValueType> (properties:SelectProp<'formType, 'dropdownValueType> list)
-  = Shims.DropdownShim properties :> IFormComponent<'formType>
+let Table<'formType, 'collectionItemType> (properties:TableProp<'formType, 'collectionItemType> list) =
+  Shims.TableShim properties :> IFormComponent<'formType>
+let Select<'formType, 'dropdownValueType> (properties:SelectProp<'formType, 'dropdownValueType> list) =
+  Shims.DropdownShim properties :> IFormComponent<'formType>
 
+#if FABLE_COMPILER
+let Custom<'formType> (elementFunc:CustomComponentProps<'formType> -> Fable.React.ReactElement) =
+  Shims.CustomShim elementFunc
+#endif
        
 let inline Validate (PropertyValidator x) = InputProp.InputValidator x
-    
-(*
-type Property private () =
-  static member getter<'formType>(getter:'formType->string) =
-    InputProp.Getter (PropertyGetter<'formType>.TextGetter getter)
-  static member getter<'formType>(getter:'formType->int) =
-    InputProp.Getter (PropertyGetter<'formType>.IntGetter getter)
-  static member getter<'formType>(getter:'formType->DateTime) =
-    InputProp.Getter (PropertyGetter<'formType>.DateTimeGetter getter)
-    
-  static member setter<'formType>(setter:'formType->string->'formType) =
-    Setter (PropertySetter<'formType>.TextSetter setter)
-  static member setter<'formType>(setter:'formType->int->'formType) =
-    Setter (PropertySetter<'formType>.IntSetter setter)
-  static member setter<'formType>(setter:'formType->DateTime->'formType) =
-    Setter (PropertySetter<'formType>.DateTimeSetter setter)
-*)
     
 type Collection private () =
   static member getter getter =

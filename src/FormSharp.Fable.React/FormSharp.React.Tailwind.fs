@@ -45,7 +45,7 @@ module Component =
       (if isInGrid then "border-gray-100" else "border-gray-300"), None, shadowStyling
     
   [<ReactComponent>]
-  let Dropdown (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ (props:SelectProp<'formType, 'dropdownValueType> list) =
+  let Dropdown (componentPrefix:string) depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty state (props:SelectProp<'formType, 'dropdownValueType> list) =
     let items,setItems =
       React.useState(
         props |> List.tryPick(function | SelectProp.Items items -> Some items | _ -> None) |> Option.defaultValue []
@@ -71,7 +71,7 @@ module Component =
     
     let updateWithItemAtIndex func (itemIndexAsString:string) =
       let itemIndex = itemIndexAsString |> int
-      updateState { state with Model = func state.Model (items.[itemIndex] |> fst) ; IsDirty = true}
+      updateState ({ state with Model = func state.Model (items.[itemIndex] |> fst) ; IsDirty = true}:RendererState<'formType>)
       setIsTouched true
     
     let propOnChange =
@@ -136,7 +136,7 @@ module Component =
     
 
   [<ReactComponent>]  
-  let Input (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty type' _ props =
+  let Input (componentPrefix:string) depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty type' state props =
       let isTouched,setIsTouched = React.useState false    
     
       let convertToPropValue value =
@@ -152,7 +152,7 @@ module Component =
         |> Helpers.getInputPropertySetter
         |> (function        
           | Some (PropertySetter.IntSetter func) ->
-            (prop.onChange (fun (nv:int) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
+            (prop.onChange (fun (nv:int) -> updateState ({ state with Model = func state.Model nv ; IsDirty = true}:RendererState<'formType>) ; setIsTouched true))
           | Some (PropertySetter.TextSetter func) ->
             (prop.onChange (fun (nv:string) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))
           | Some (PropertySetter.DateTimeSetter func) ->
@@ -206,7 +206,7 @@ module Component =
         ]        
         
   [<ReactComponent>]  
-  let CheckBox (componentPrefix:string) depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty _ props =
+  let CheckBox (componentPrefix:string) depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty state props =
       let isTouched,setIsTouched = React.useState false    
     
       let propOnChange =
@@ -214,7 +214,7 @@ module Component =
         |> Helpers.getCheckBoxPropertySetter
         |> (function        
           | Some func ->
-            (prop.onChange (fun (nv:bool) -> updateState { state with Model = func state.Model nv ; IsDirty = true} ; setIsTouched true))          
+            (prop.onChange (fun (nv:bool) -> updateState ({ state with Model = func state.Model nv ; IsDirty = true}:RendererState<'formType>) ; setIsTouched true))          
           | _ ->
             (prop.onChange (fun (_:Browser.Types.Event) -> setIsTouched true))
         )
@@ -275,7 +275,7 @@ module Component =
       ]                
 
   // Note that in order to have tables in side other tables we would need to pass down the updater and wrap it in the parent updater
-  let inline Table (componentPrefix:string) (depth:int) (cIndex:int) updateState rendererState isFormDisabled _ showValidationWhenNotDirty renderComponent _ props =
+  let inline Table (componentPrefix:string) (depth:int) (cIndex:int) updateState isFormDisabled _ showValidationWhenNotDirty renderComponent rendererState props =
     let columns =
       props
       |> List.tryPick(function | TableProp.Columns columns -> Some columns | _ -> None)
@@ -423,6 +423,12 @@ module Component =
         prop.key $"{getComponentKey componentPrefix depth cIndex}"
         prop.children wrappedTable
       ]
+      
+  [<ReactComponent>]
+  let CustomFormComponent<'formType>
+      (props:CustomComponentProps<'formType>)
+      (elementFunc:CustomComponentProps<'formType> -> Fable.React.ReactElement) =
+    elementFunc props    
 
   let rec render componentPrefix depth cIndex isFormDisabled isInGrid showValidationWhenNotDirty state updateState componentDefinition =
     let renderGroup _ props =
@@ -467,17 +473,23 @@ module Component =
         prop.className "space-y-8 divide-y divide-gray-200"
         prop.key (getComponentKey componentPrefix depth cIndex)
         prop.children (Html.div [ title ; description ; children])        
-      ]
+      ]            
     
     // TODO: come back to this and resolve more elegantly - see note on shims as to what this is all about
-    Shims.TextInputShim.renderer <- Input componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty "text" 
-    Shims.DateInputShim.renderer <- Input componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty "date" 
+    Shims.TextInputShim.renderer <- Input componentPrefix depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty "text" 
+    Shims.DateInputShim.renderer <- Input componentPrefix depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty "date" 
     Shims.GroupShim.renderer <- renderGroup
-    Shims.TableShim.renderer <- Table componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty render
-    Shims.DropdownShim.renderer <- Dropdown componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty
-    Shims.BooleanInputShim.renderer <- CheckBox componentPrefix depth cIndex updateState state isFormDisabled isInGrid showValidationWhenNotDirty
+    Shims.TableShim.renderer <- Table componentPrefix depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty render
+    Shims.DropdownShim.renderer <- Dropdown componentPrefix depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty
+    Shims.BooleanInputShim.renderer <- CheckBox componentPrefix depth cIndex updateState isFormDisabled isInGrid showValidationWhenNotDirty
+    Shims.CustomShim.renderer <- CustomFormComponent
     
-    componentDefinition.render state.Model
+    componentDefinition.render
+      state
+      { UpdateModel = (fun newModel -> updateState { state with Model = newModel ; IsDirty = true })
+        ComponentDepth = 0
+        ComponentIndex =0
+      }
   
 [<ReactComponent>]
 let Form formId
