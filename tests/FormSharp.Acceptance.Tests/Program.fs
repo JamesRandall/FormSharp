@@ -30,10 +30,10 @@ let tests (browser:IBrowser) =
       let! (result:string list) = task {
         let! page = loadInitialPage ()        
         let! surname = page.EvalOnSelectorAsync<string>("[name=\"input_1_0_Surname\"]", "e => e.value")
-        let! forename = page.EvalOnSelectorAsync<string>("[name=\"input_1_1_Forename\"]", "e => e.value")
-        let! dateOfBirth = page.EvalOnSelectorAsync<string>("[name=\"input_1_2_Date_of_birth\"]", "e => e.value")
-        let! role = page.EvalOnSelectorAsync<string>("[name=\"input_1_3_Role\"]", "e => e.value")
-        let! isAuthorized = page.EvalOnSelectorAsync<bool>("[name=\"input_1_4_Is_person_authorized\"]", "e => e.checked")
+        let! forename = page.EvalOnSelectorAsync<string>("[name=\"input_1_2_Forename\"]", "e => e.value")
+        let! dateOfBirth = page.EvalOnSelectorAsync<string>("[name=\"input_1_3_Date_of_birth\"]", "e => e.value")
+        let! role = page.EvalOnSelectorAsync<string>("[name=\"input_1_4_Role\"]", "e => e.value")
+        let! isAuthorized = page.EvalOnSelectorAsync<bool>("[name=\"input_1_5_Is_person_authorized\"]", "e => e.checked")
         return [
           surname
           forename
@@ -55,10 +55,10 @@ let tests (browser:IBrowser) =
         //let! _ = page.WaitForSelectorAsync ("option", PageWaitForSelectorOptions(State=WaitForSelectorState.Attached))
         //let! _ = page.WaitForResponseAsync ("**/roles")
         do! page.FillAsync("[name=\"input_1_0_Surname\"]", "Jane")
-        do! page.FillAsync("[name=\"input_1_1_Forename\"]", "Bloggs")
-        do! page.FillAsync("[name=\"input_1_2_Date_of_birth\"]", "1989-10-12")
-        do! page.ClickAsync("[name=\"input_1_4_Is_person_authorized\"]")
-        let! _ = page.SelectOptionAsync("[name=\"input_1_3_Role\"]", "0")        
+        do! page.FillAsync("[name=\"input_1_2_Forename\"]", "Bloggs")
+        do! page.FillAsync("[name=\"input_1_3_Date_of_birth\"]", "1989-10-12")
+        let! _ = page.SelectOptionAsync("[name=\"input_1_4_Role\"]", "0")
+        do! page.ClickAsync("[name=\"input_1_5_Is_person_authorized\"]")
         do! page.ClickAsync("button[type=\"submit\"]")
         //let! _ = page.WaitForSelectorAsync("button[type=\"submit\"]", PageWaitForSelectorOptions(State=WaitForSelectorState.Detached))
         let! _ = page.WaitForSelectorAsync("text=Thanks for updating your details!")
