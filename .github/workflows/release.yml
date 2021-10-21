@@ -1,0 +1,33 @@
+name: Build and test
+on: release
+
+# This release script works on the basis that releases are named with the pattern v0.0.0
+jobs:
+  buildandtest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      ref: ${{ github.ref }}
+    
+    - name: Setup .NET Core 5.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    
+    # when working build test step in here
+
+    - name: Package
+      run: ./pack.sh "${GITHUB_REF:1}"
+
+    - name: Push
+      run: dotnet nuget push "packages/FormSharp.Fable.React.${GITHUB_REF:1}.nupkg" --api-key ${{ secrets.NUGET_KEY }}
+
+    - name: Output package as artifact
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: packages
+        path: packages/*.nupkg
+      
+    

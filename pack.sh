@@ -1,7 +1,7 @@
 # We use linked files in the source tree but the relative paths don't play nicely with how Fable needs things packing
 # so we have to make some modifications to proj files to handle the pack
 
-PACKAGE_VERSION=0.0.1
+PACKAGE_VERSION=$1
 
 echo "Creating source for packages..."
 rm -rf ./packages
