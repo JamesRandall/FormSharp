@@ -2,9 +2,7 @@ module App
 
 open Feliz
 open Browser.Dom
-open FormSharp.Core
-open FormSharp.Fable
-open FormSharp.Fable.React
+open FormSharp
 open Fable.Core.JsInterop
 open ExampleForm
 open Model

@@ -1,3 +1,4 @@
+[<AutoOpen>]
 module FormSharp.Core
 
 open System
@@ -438,6 +439,14 @@ type FormOptions<'formType> =
         | ShowValidationWhenNotDirty -> { state with ShowValidationWhenNotDirty = true }
       ) FormOptions.Default
 
+// Helper function to assist in the update of collections
+let updateList action item collection =
+  match action with
+  | CollectionAction.Add -> collection @ [item]
+  | CollectionAction.Delete itemIndex ->
+    (collection |> List.take itemIndex) @ (collection |> List.skip (itemIndex + 1))
+  | CollectionAction.Update itemIndex ->
+    collection |> List.mapi (fun i li -> if i=itemIndex then item else li)
 
 module Helpers =
   [<RequireQualifiedAccess>]
@@ -510,13 +519,4 @@ module Helpers =
           
     recursivelyValidate formDefinition state 
     |> List.sortBy(function | ValidationResult.Ok -> 2 | ValidationResult.Warning _ -> 1 | ValidationResult.Error _ -> 0)
-    |> List.head
-
-  module State =  
-    let updateList action item collection =
-      match action with
-      | CollectionAction.Add -> collection @ [item]
-      | CollectionAction.Delete itemIndex ->
-        (collection |> List.take itemIndex) @ (collection |> List.skip (itemIndex + 1))
-      | CollectionAction.Update itemIndex ->
-        collection |> List.mapi (fun i li -> if i=itemIndex then item else li)
+    |> List.head    

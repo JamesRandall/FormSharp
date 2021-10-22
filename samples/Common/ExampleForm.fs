@@ -1,10 +1,11 @@
 module ExampleForm
 
+#if FABLE_COMPILER
 open Feliz
 open Browser
-open FormSharp.Core
+#endif
+open FormSharp
 open Model
-open Helpers.State
 
 let formDefinition = [
   Group [

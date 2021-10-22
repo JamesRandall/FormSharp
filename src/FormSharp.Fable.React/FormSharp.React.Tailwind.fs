@@ -1,7 +1,7 @@
-﻿module FormSharp.Fable.React.Tailwind
+﻿module FormSharp.Tailwind
 
-open FormSharp.Core
-open FormSharp.Fable.Core
+open Core
+open FableCore
 open Feliz
 open System
 open Fable.Core.JS
